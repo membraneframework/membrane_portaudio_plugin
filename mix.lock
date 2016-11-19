@@ -1,2 +1,2 @@
 %{"membrane_common_c": {:git, "git@bitbucket.org:radiokit/membrane-common-c.git", "b481a578c7300045b001d618e6fbb72773446fe9", []},
-  "membrane_core": {:git, "git@bitbucket.org:radiokit/membrane-core.git", "f85f7686f516354da67d9cf53896ee8f83e4959b", []}}
+  "membrane_core": {:git, "git@bitbucket.org:radiokit/membrane-core.git", "89b6cfec69ba22802a598c38af9a45002e21ac30", []}}

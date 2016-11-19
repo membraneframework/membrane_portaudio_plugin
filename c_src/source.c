@@ -13,17 +13,32 @@
 ErlNifResourceType *RES_SOURCE_HANDLE_TYPE;
 
 
-void res_source_handle_destructor(ErlNifEnv *env, void *value) {
-  MEMBRANE_DEBUG("Destroying SourceHandle %p", value);
-
+static void res_source_handle_destructor(ErlNifEnv *env, void *value) {
+  PaError error;
   SourceHandle *source_handle = (SourceHandle *) value;
 
-  // TODO close stream if it is not closed
-  // TODO do Pa_Terminate
+  MEMBRANE_DEBUG("Destroying SourceHandle %p", value);
+
+  if(Pa_IsStreamStopped(source_handle->stream) == 0) {
+    error = Pa_StopStream(source_handle->stream);
+    if(error != paNoError) {
+      MEMBRANE_DEBUG("Pa_StopStream: error = %d", error);
+    }
+  }
+
+  error = Pa_CloseStream(source_handle->stream);
+  if(error != paNoError) {
+    MEMBRANE_DEBUG("Pa_CloseStream: error = %d", error);
+  }
+
+  error = Pa_Terminate();
+  if(error != paNoError) {
+    MEMBRANE_DEBUG("Pa_Terminate: error = %d", error);
+  }
 }
 
 
-int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
+static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
   int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
   RES_SOURCE_HANDLE_TYPE =
     enif_open_resource_type(env, NULL, "SourceHandle", res_source_handle_destructor, flags, NULL);
@@ -101,8 +116,8 @@ static ERL_NIF_TERM export_stop(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   }
 
 
-  // Start the stream
-  error = Pa_CloseStream(source_handle->stream);
+  // Stop the stream
+  error = Pa_StopStream(source_handle->stream);
   if(error != paNoError) {
     MEMBRANE_DEBUG("Pa_StartStream: error = %d", error);
     return membrane_util_make_error_internal(env, "paclosestream");
@@ -163,8 +178,8 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   error = Pa_OpenDefaultStream(&(source_handle->stream),
                               2,              // 2 input channels
                               0,              // no output
-                              paInt16,        // 16 bit integer format
-                              48000,          // sample rate
+                              paInt16,        // 16 bit integer format FIXME hardcoded
+                              48000,          // sample rate FIXME hardcoded
                               buffer_size,    // frames per buffer
                               callback,       // callback function for processing
                               source_handle); // user data passed to the callback

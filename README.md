@@ -21,7 +21,10 @@ Then add the following line to your `applications` in `mix.exs`.
 # Sample usage
 
 ```elixir
+{:ok, sink} = Membrane.Element.PortAudio.Sink.start_link(%Membrane.Element.PortAudio.SinkOptions{})
 {:ok, source} = Membrane.Element.PortAudio.Source.start_link(%Membrane.Element.PortAudio.SourceOptions{})
+Membrane.Element.link(source, sink)
+Membrane.Element.play(sink)
 Membrane.Element.play(source)
 ```
 

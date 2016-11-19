@@ -34,27 +34,42 @@ defmodule Membrane.Element.PortAudio.Source do
         {:ok, %{state | native: native}}
 
       {:error, reason} ->
-        {:error, {:create, reason}}
+        {:error, {:create, reason}, state}
     end
   end
 
 
   @doc false
   def handle_play(%{native: native} = state) do
-    Membrane.Element.PortAudio.SourceNative.start(native)
-    {:ok, state}
+    case Membrane.Element.PortAudio.SourceNative.start(native) do
+      :ok ->
+        {:ok, state}
+
+      {:error, reason} ->
+        {:error, {:start, reason}, state}
+    end
   end
 
 
   @doc false
   def handle_stop(%{native: native} = state) do
-    Membrane.Element.PortAudio.SourceNative.start(native)
-    {:ok, state}
+    case Membrane.Element.PortAudio.SourceNative.stop(native) do
+      :ok ->
+        {:ok, state}
+
+      {:error, reason} ->
+        {:error, {:stop, reason}, state}
+    end
   end
 
 
   @doc false
   def handle_other({:membrane_element_portaudio_source_packet, data}, state) do
-    {:send, [%Membrane.Buffer{payload: data}], state}
+    {:send, [
+      %Membrane.Buffer{
+        caps: %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}, # FIXME so far the format is fixed
+        payload: data
+      }
+    ], state}
   end
 end
