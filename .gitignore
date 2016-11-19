@@ -1,0 +1,9 @@
+/_build
+/deps
+/test*
+/priv
+*.so
+*.dll
+*.obj
+*.exp
+*.lib
