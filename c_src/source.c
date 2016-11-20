@@ -22,18 +22,18 @@ static void res_source_handle_destructor(ErlNifEnv *env, void *value) {
   if(Pa_IsStreamStopped(source_handle->stream) == 0) {
     error = Pa_StopStream(source_handle->stream);
     if(error != paNoError) {
-      MEMBRANE_DEBUG("Pa_StopStream: error = %d", error);
+      MEMBRANE_DEBUG("Pa_StopStream: error = %d (%s)", error, Pa_GetErrorText(error));
     }
   }
 
   error = Pa_CloseStream(source_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_CloseStream: error = %d", error);
+    MEMBRANE_DEBUG("Pa_CloseStream: error = %d (%s)", error, Pa_GetErrorText(error));
   }
 
   error = Pa_Terminate();
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_Terminate: error = %d", error);
+    MEMBRANE_DEBUG("Pa_Terminate: error = %d (%s)", error, Pa_GetErrorText(error));
   }
 }
 
@@ -94,7 +94,7 @@ static ERL_NIF_TERM export_start(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
   // Start the stream
   error = Pa_StartStream(source_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_StartStream: error = %d", error);
+    MEMBRANE_DEBUG("Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "pastartstream");
   }
 
@@ -119,7 +119,7 @@ static ERL_NIF_TERM export_stop(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   // Stop the stream
   error = Pa_StopStream(source_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_StartStream: error = %d", error);
+    MEMBRANE_DEBUG("Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "paclosestream");
   }
 
@@ -169,7 +169,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   // Initialize PortAudio
   error = Pa_Initialize();
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_Initialize: error = %d", error);
+    MEMBRANE_DEBUG("Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "painitialize");
   }
 
@@ -185,7 +185,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
                               source_handle); // user data passed to the callback
 
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_OpenDefaultStream: error = %d", error);
+    MEMBRANE_DEBUG("Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "paopendefaultstream");
   }
 
