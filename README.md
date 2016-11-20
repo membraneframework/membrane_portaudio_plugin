@@ -20,6 +20,8 @@ Then add the following line to your `applications` in `mix.exs`.
 
 # Sample usage
 
+This should create a loopback between default capture and playback device:
+
 ```elixir
 {:ok, sink} = Membrane.Element.PortAudio.Sink.start_link(%Membrane.Element.PortAudio.SinkOptions{})
 {:ok, source} = Membrane.Element.PortAudio.Source.start_link(%Membrane.Element.PortAudio.SourceOptions{})
@@ -31,4 +33,12 @@ Membrane.Element.play(source)
 
 # Authors
 
-Marcin Lewandowski
+* Marcin Lewandowski
+
+Ringbuffer code ported from PortAudio:
+
+* Author: Phil Burk, http://www.softsynth.com
+* modified for SMP safety on Mac OS X by Bjorn Roche
+* modified for SMP safety on Linux by Leland Lucius
+* also, allowed for const where possible
+* modified for multiple-byte-sized data elements by Sven Fischer

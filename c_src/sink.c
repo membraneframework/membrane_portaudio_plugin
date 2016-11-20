@@ -8,7 +8,7 @@
 #include "sink.h"
 
 #define MEMBRANE_LOG_TAG  "Membrane.Element.PortAudio.SinkNative"
-
+#define SAMPLE_SIZE_BYTES 4
 
 ErlNifResourceType *RES_SOURCE_HANDLE_TYPE;
 
@@ -22,18 +22,26 @@ static void res_sink_handle_destructor(ErlNifEnv *env, void *value) {
   if(Pa_IsStreamStopped(sink_handle->stream) == 0) {
     error = Pa_StopStream(sink_handle->stream);
     if(error != paNoError) {
-      MEMBRANE_DEBUG("Pa_StopStream: error = %d", error);
+      MEMBRANE_DEBUG("Pa_StopStream: error = %d (%s)", error, Pa_GetErrorText(error));
     }
   }
 
   error = Pa_CloseStream(sink_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_CloseStream: error = %d", error);
+    MEMBRANE_DEBUG("Pa_CloseStream: error = %d (%s)", error, Pa_GetErrorText(error));
   }
 
   error = Pa_Terminate();
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_Terminate: error = %d", error);
+    MEMBRANE_DEBUG("Pa_Terminate: error = %d (%s)", error, Pa_GetErrorText(error));
+  }
+
+  if(sink_handle->ringbuffer_data != NULL) {
+    free(sink_handle->ringbuffer_data);
+  }
+
+  if(sink_handle->ringbuffer != NULL) {
+    free(sink_handle->ringbuffer);
   }
 }
 
@@ -47,10 +55,17 @@ static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
 }
 
 
-static int callback(const void *input_buffer, void *output_buffer, unsigned long frames, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void *user_data) {
+static int callback(const void *input_buffer, void *output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void *user_data) {
   SinkHandle *sink_handle = (SinkHandle *) user_data;
-  int        *out         = (int *) output_buffer;
 
+  ring_buffer_size_t elements_available = PaUtil_GetRingBufferReadAvailable(sink_handle->ringbuffer);
+  if(elements_available >= frames_per_buffer) {
+    ring_buffer_size_t elements_read = PaUtil_ReadRingBuffer(sink_handle->ringbuffer, output_buffer, frames_per_buffer);
+    MEMBRANE_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
+
+  } else {
+    memset(output_buffer, 0, frames_per_buffer * SAMPLE_SIZE_BYTES);
+  }
 
   return paContinue;
 }
@@ -61,7 +76,6 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
   SinkHandle *sink_handle;
   PaError error;
   ErlNifBinary payload_binary;
-
 
   // Get sink_handle arg
   if(!enif_get_resource(env, argv[0], RES_SOURCE_HANDLE_TYPE, (void **) &sink_handle)) {
@@ -75,25 +89,33 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
   }
 
 
-  // Write samples
-  error = Pa_WriteStream(sink_handle->stream, payload_binary.data, payload_binary.size / 4); // FIXME hardcoded 2 channels, 16 bit
-  if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_WriteStream: error = %d", error);
-    return membrane_util_make_error_internal(env, "pawritestream");
+  // Write samples to the ringbuffer
+  //
+  // We do not do direct write to the stream here because:
+  //
+  // a) portaudio does not support synchronous API for all types of drivers
+  // b) we don't know for how long portaudio is going to consume the data
+  //    and if it takes long time erlang scheduler will go crazy.
+  //
+  // Instead we put the data into ringbuffer and write them in the callback.
+  ring_buffer_size_t elements_written = PaUtil_WriteRingBuffer(sink_handle->ringbuffer, payload_binary.data, payload_binary.size / SAMPLE_SIZE_BYTES); // FIXME hardcoded 2 channels, 16 bit
+  MEMBRANE_DEBUG("Write: elements written = %d", elements_written);
+  if(elements_written != payload_binary.size / SAMPLE_SIZE_BYTES) {
+    MEMBRANE_DEBUG("Write: written only %d out of %lu bytes into ringbuffer", elements_written * SAMPLE_SIZE_BYTES, payload_binary.size);
+    return membrane_util_make_error(env, enif_make_atom(env, "discontinuity"));
+
+  } else {
+    return membrane_util_make_ok(env);
   }
-
-
-  // Return
-  return membrane_util_make_ok(env);
 }
 
 
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-  int             buffer_size;
-  char            device_id[64];
-  SinkHandle      *sink_handle;
-  PaError         error;
+  int               buffer_size;
+  char              device_id[64];
+  SinkHandle       *sink_handle;
+  PaError           error;
 
 
   // Get device ID arg
@@ -114,10 +136,22 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   MEMBRANE_DEBUG("Creating SinkHandle %p", sink_handle);
 
 
+  // Initialize ringbuffer
+  // FIXME hardcoded format, stereo frame, 16bit
+  sink_handle->ringbuffer_data = malloc(SAMPLE_SIZE_BYTES * buffer_size * 2);
+  sink_handle->ringbuffer = malloc(sizeof(PaUtilRingBuffer));
+  if(PaUtil_InitializeRingBuffer(sink_handle->ringbuffer, SAMPLE_SIZE_BYTES, 4096, sink_handle->ringbuffer_data) == -1) {
+    MEMBRANE_DEBUG("PaUtil_InitializeRingBuffer: error = %d (%s)", error, Pa_GetErrorText(error));
+    enif_free(sink_handle);
+    return membrane_util_make_error_internal(env, "pautilinitializeringbuffer");
+  }
+
+
   // Initialize PortAudio
   error = Pa_Initialize();
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_Initialize: error = %d", error);
+    MEMBRANE_DEBUG("Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
+    enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "painitialize");
   }
 
@@ -133,7 +167,8 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
                               sink_handle);   // user data passed to the callback
 
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_OpenDefaultStream: error = %d", error);
+    MEMBRANE_DEBUG("Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "paopendefaultstream");
   }
 
@@ -141,7 +176,8 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   // Start the stream
   error = Pa_StartStream(sink_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_StartStream: error = %d", error);
+    MEMBRANE_DEBUG("Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "pastartstream");
   }
 

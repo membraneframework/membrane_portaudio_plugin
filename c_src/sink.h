@@ -14,11 +14,16 @@
 #include <portaudio.h>
 #include <membrane/membrane.h>
 
+#include "pa_ringbuffer.h"
+
+
 typedef struct _SinkHandle SinkHandle;
 
 struct _SinkHandle
 {
-  PaStream   *stream;          // Port Audio stream
+  PaStream         *stream;           // Port Audio stream
+  PaUtilRingBuffer *ringbuffer;       // Ring buffer that will keep data before it is written to the sound card
+  void             *ringbuffer_data;  // Ring buffer's memory
 };
 
 #endif
