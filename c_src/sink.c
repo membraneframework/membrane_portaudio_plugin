@@ -7,8 +7,9 @@
 
 #include "sink.h"
 
-#define MEMBRANE_LOG_TAG  "Membrane.Element.PortAudio.SinkNative"
-#define SAMPLE_SIZE_BYTES 4
+#define MEMBRANE_LOG_TAG         "Membrane.Element.PortAudio.SinkNative"
+#define SAMPLE_SIZE_BYTES        4
+#define RINGBUFFER_SIZE_ELEMENTS 4096
 
 ErlNifResourceType *RES_SOURCE_HANDLE_TYPE;
 
@@ -138,9 +139,9 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
 
   // Initialize ringbuffer
   // FIXME hardcoded format, stereo frame, 16bit
-  sink_handle->ringbuffer_data = malloc(SAMPLE_SIZE_BYTES * buffer_size * 2);
+  sink_handle->ringbuffer_data = malloc(SAMPLE_SIZE_BYTES * RINGBUFFER_SIZE_ELEMENTS);
   sink_handle->ringbuffer = malloc(sizeof(PaUtilRingBuffer));
-  if(PaUtil_InitializeRingBuffer(sink_handle->ringbuffer, SAMPLE_SIZE_BYTES, 4096, sink_handle->ringbuffer_data) == -1) {
+  if(PaUtil_InitializeRingBuffer(sink_handle->ringbuffer, SAMPLE_SIZE_BYTES, RINGBUFFER_SIZE_ELEMENTS, sink_handle->ringbuffer_data) == -1) {
     MEMBRANE_DEBUG("PaUtil_InitializeRingBuffer: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "pautilinitializeringbuffer");
