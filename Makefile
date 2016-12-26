@@ -1,4 +1,4 @@
-ERL_INCLUDE_PATH=/usr/local/Cellar/erlang/19.0.2/lib/erlang/usr/include/
+ERL_INCLUDE_PATH=/usr/local/Cellar/erlang/19.2/lib/erlang/usr/include/
 PORTAUDIO_INCLUDE_PATH=/usr/local/Cellar/portaudio/19.20140130/include/
 PORTAUDIO_LIB_PATH=/usr/local/Cellar/portaudio/19.20140130/lib/
 
