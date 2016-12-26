@@ -1,21 +1,23 @@
-defmodule Membrane.Element.PortAudio.SourceOptions do
-  defstruct \
-    device_id: nil,
-    buffer_size: 256
-
-  @type t :: %Membrane.Element.PortAudio.SourceOptions{
-    device_id: String.t | nil,
-    buffer_size: non_neg_integer
-  }
-end
-
-
 defmodule Membrane.Element.PortAudio.Source do
+  @moduledoc """
+  Audio source that captures sound via multi-platform PortAudio library.
+  """
+
   use Membrane.Element.Base.Source
   alias Membrane.Element.PortAudio.SourceOptions
 
 
+  # FIXME format is hardcoded at the moment
+  @supported_caps %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}
+
+
   # Private API
+
+  @doc false
+  def potential_source_pads(), do: %{
+    :source => {:always, [@supported_caps]}
+  }
+
 
   @doc false
   def handle_init(%SourceOptions{device_id: device_id, buffer_size: buffer_size}) do
@@ -31,7 +33,9 @@ defmodule Membrane.Element.PortAudio.Source do
   def handle_prepare(%{device_id: device_id, buffer_size: buffer_size} = state) do
     case Membrane.Element.PortAudio.SourceNative.create(device_id, self(), buffer_size) do
       {:ok, native} ->
-        {:ok, %{state | native: native}}
+        {:ok, [
+          {:send, {:source, %Membrane.Event.caps(@supported_caps)}}
+        ], %{state | native: native}}
 
       {:error, reason} ->
         {:error, {:create, reason}, state}
@@ -64,12 +68,9 @@ defmodule Membrane.Element.PortAudio.Source do
 
 
   @doc false
-  def handle_other({:membrane_element_portaudio_source_packet, data}, state) do
-    {:send, [
-      %Membrane.Buffer{
-        caps: %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}, # FIXME so far the format is fixed
-        payload: data
-      }
+  def handle_other({:membrane_element_portaudio_source_packet, payload}, state) do
+    {:ok, [
+      {:send, :source, [%Membrane.Buffer{caps: @supported_caps, payload: payload}}]},
     ], state}
   end
 end
