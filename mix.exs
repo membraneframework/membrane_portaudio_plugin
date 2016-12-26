@@ -32,6 +32,7 @@ defmodule Membrane.Element.PortAudio.Mixfile do
     [
       {:membrane_core, git: "git@bitbucket.org:radiokit/membrane-core.git"},
       {:membrane_common_c, git: "git@bitbucket.org:radiokit/membrane-common-c.git"},
+      {:membrane_caps_audio_raw, git: "git@bitbucket.org:radiokit/membrane-caps-audio-raw.git"},
     ]
   end
 end

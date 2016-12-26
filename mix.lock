@@ -1,2 +1,3 @@
-%{"membrane_common_c": {:git, "git@bitbucket.org:radiokit/membrane-common-c.git", "94ffd537ae8b2421cefc44e336c25c53f7740bb5", []},
-  "membrane_core": {:git, "git@bitbucket.org:radiokit/membrane-core.git", "89b6cfec69ba22802a598c38af9a45002e21ac30", []}}
+%{"membrane_caps_audio_raw": {:git, "git@bitbucket.org:radiokit/membrane-caps-audio-raw.git", "8560706c4a425251064de1a4093d305eb9cfdeed", []},
+  "membrane_common_c": {:git, "git@bitbucket.org:radiokit/membrane-common-c.git", "94ffd537ae8b2421cefc44e336c25c53f7740bb5", []},
+  "membrane_core": {:git, "git@bitbucket.org:radiokit/membrane-core.git", "ade0cad3e0cf4cb523f2ced209d61173ea4b90a6", []}}
