@@ -41,7 +41,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
 
   @doc false
-  def handle_buffer(%Membrane.Buffer{caps: @supported_caps, payload: payload}, %{native: native} = state) do
+  def handle_buffer(%Membrane.Buffer{payload: payload}, %{native: native} = state) do
     case Membrane.Element.PortAudio.SinkNative.write(native, payload) do
       :ok ->
         {:ok, [], state}

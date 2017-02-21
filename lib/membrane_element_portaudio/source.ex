@@ -67,7 +67,7 @@ defmodule Membrane.Element.PortAudio.Source do
   @doc false
   def handle_other({:membrane_element_portaudio_source_packet, payload}, state) do
     {:ok, [
-      {:send, {:source, [%Membrane.Buffer{caps: @supported_caps, payload: payload}]}},
+      {:send, {:source, [%Membrane.Buffer{payload: payload}]}},
     ], state}
   end
 end
