@@ -11,9 +11,9 @@ defmodule Membrane.Element.PortAudio.Mixfile do
      maintainers: ["Marcin Lewandowski"],
      licenses: ["LGPL"],
      name: "Membrane Element: PortAudio",
-     source_url: "https://bitbucket.com/radiokit/membrane-element-portaudio",
+     source_url: "https://github.com/membraneframework/membrane-element-portaudio",
      preferred_cli_env: [espec: :test],
-     deps: deps]
+     deps: deps()]
   end
 
 
@@ -30,9 +30,9 @@ defmodule Membrane.Element.PortAudio.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, git: "git@bitbucket.org:radiokit/membrane-core.git"},
-      {:membrane_common_c, git: "git@bitbucket.org:radiokit/membrane-common-c.git"},
-      {:membrane_caps_audio_raw, git: "git@bitbucket.org:radiokit/membrane-caps-audio-raw.git"},
+      {:membrane_core, git: "git@github.com:membraneframework/membrane-core.git"},
+      {:membrane_common_c, git: "git@github.com:membraneframework/membrane-common-c.git"},
+      {:membrane_caps_audio_raw, git: "git@github.com:membraneframework/membrane-caps-audio-raw.git"},
     ]
   end
 end
