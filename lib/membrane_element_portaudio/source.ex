@@ -4,8 +4,10 @@ defmodule Membrane.Element.PortAudio.Source do
   """
 
   use Membrane.Element.Base.Source
+  alias Membrane.Buffer
   alias Membrane.Element.PortAudio.SourceOptions
-
+  alias Membrane.Element.PortAudio.SourceNative
+  
   # FIXME format is hardcoded at the moment
   @supported_caps %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}
 
@@ -28,7 +30,7 @@ defmodule Membrane.Element.PortAudio.Source do
 
   @doc false
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    case Membrane.Element.PortAudio.SourceNative.create(endpoint_id, self(), buffer_size) do
+    case SourceNative.create(endpoint_id, self(), buffer_size) do
       {:ok, native} ->
         {:ok, [
           {:caps, {:source, @supported_caps}}
@@ -42,7 +44,7 @@ defmodule Membrane.Element.PortAudio.Source do
 
   @doc false
   def handle_play(%{native: native} = state) do
-    case Membrane.Element.PortAudio.SourceNative.start(native) do
+    case SourceNative.start(native) do
       :ok ->
         {:ok, state}
 
@@ -54,7 +56,7 @@ defmodule Membrane.Element.PortAudio.Source do
 
   @doc false
   def handle_stop(%{native: native} = state) do
-    case Membrane.Element.PortAudio.SourceNative.stop(native) do
+    case SourceNative.stop(native) do
       :ok ->
         {:ok, state}
 
@@ -67,7 +69,7 @@ defmodule Membrane.Element.PortAudio.Source do
   @doc false
   def handle_other({:membrane_element_portaudio_source_packet, payload}, state) do
     {:ok, [
-      {:send, {:source, [%Membrane.Buffer{payload: payload}]}},
+      {:send, {:source, %Buffer{payload: payload}}},
     ], state}
   end
 end

@@ -1,4 +1,4 @@
 %{"connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [:mix], []},
-  "membrane_caps_audio_raw": {:git, "git@github.com:membraneframework/membrane-caps-audio-raw.git", "6ccde1124237dfa580d314d1a7475b8ad98bf665", []},
+  "membrane_caps_audio_raw": {:git, "git@github.com:membraneframework/membrane-caps-audio-raw.git", "4fdb3d75e2ff029ec1390daf3166c787722848fb", []},
   "membrane_common_c": {:git, "git@github.com:membraneframework/membrane-common-c.git", "3e4f6abcf2f4dd9dc47fbfee943e37db87f30655", []},
-  "membrane_core": {:git, "git@github.com:membraneframework/membrane-core.git", "4c1478a774d81519e2692d8b1efc138e6dffab78", []}}
+  "membrane_core": {:git, "git@github.com:membraneframework/membrane-core.git", "aabf681aa12d84a091c84d551a629b15849fc342", []}}

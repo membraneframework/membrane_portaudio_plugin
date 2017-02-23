@@ -4,6 +4,8 @@ defmodule Membrane.Element.PortAudio.Sink do
   """
 
   use Membrane.Element.Base.Sink
+  alias Membrane.Buffer
+  alias Membrane.Element.PortAudio.SinkNative
   alias Membrane.Element.PortAudio.SinkOptions
 
   # FIXME format is hardcoded at the moment
@@ -28,7 +30,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   @doc false
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    case Membrane.Element.PortAudio.SinkNative.create(endpoint_id, buffer_size) do
+    case SinkNative.create(endpoint_id, buffer_size) do
       {:ok, native} ->
         {:ok, [
           {:caps, {:sink, @supported_caps}}
@@ -41,8 +43,8 @@ defmodule Membrane.Element.PortAudio.Sink do
 
 
   @doc false
-  def handle_buffer(%Membrane.Buffer{payload: payload}, %{native: native} = state) do
-    case Membrane.Element.PortAudio.SinkNative.write(native, payload) do
+  def handle_buffer(:sink, _caps, %Buffer{payload: payload}, %{native: native} = state) do
+    case SinkNative.write(native, payload) do
       :ok ->
         {:ok, [], state}
 
