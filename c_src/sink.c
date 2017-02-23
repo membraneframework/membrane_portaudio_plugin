@@ -114,15 +114,15 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
   int               buffer_size;
-  char              device_id[64];
+  char              endpoint_id[64];
   SinkHandle       *sink_handle;
   PaError           error;
 
 
   // Get device ID arg
   // FIXME it is not going to be an atom
-  // if(!enif_get_atom(env, argv[0], (char *) device_id, ENDPOINT_ID_LEN, ERL_NIF_LATIN1)) {
-  //   return membrane_util_make_error_args(env, "device_id", "Passed device ID is not valid");
+  // if(!enif_get_atom(env, argv[0], (char *) endpoint_id, ENDPOINT_ID_LEN, ERL_NIF_LATIN1)) {
+  //   return membrane_util_make_error_args(env, "endpoint_id", "Passed device ID is not valid");
   // }
 
 

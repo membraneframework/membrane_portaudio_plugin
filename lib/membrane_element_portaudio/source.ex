@@ -17,9 +17,9 @@ defmodule Membrane.Element.PortAudio.Source do
   # Private API
 
   @doc false
-  def handle_init(%SourceOptions{device_id: device_id, buffer_size: buffer_size}) do
+  def handle_init(%SourceOptions{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
     {:ok, %{
-      device_id: device_id,
+      endpoint_id: endpoint_id,
       buffer_size: buffer_size,
       native: nil,
     }}
@@ -27,8 +27,8 @@ defmodule Membrane.Element.PortAudio.Source do
 
 
   @doc false
-  def handle_prepare(%{device_id: device_id, buffer_size: buffer_size} = state) do
-    case Membrane.Element.PortAudio.SourceNative.create(device_id, self(), buffer_size) do
+  def handle_prepare(%{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
+    case Membrane.Element.PortAudio.SourceNative.create(endpoint_id, self(), buffer_size) do
       {:ok, native} ->
         {:ok, [
           {:caps, {:source, @supported_caps}}

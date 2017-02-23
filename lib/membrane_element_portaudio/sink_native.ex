@@ -27,7 +27,7 @@ defmodule Membrane.Element.PortAudio.SinkNative do
   """
   @spec create(String.t | nil, non_neg_integer) ::
     {:ok, any} | {:error, {:args, atom, String.t}} | {:error, {:create, atom}}
-  def create(_device_id, _buffer_size), do: raise "NIF fail"
+  def create(_endpoint_id, _buffer_size), do: raise "NIF fail"
 
 
   @doc """
