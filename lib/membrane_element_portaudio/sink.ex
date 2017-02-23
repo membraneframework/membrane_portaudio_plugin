@@ -27,7 +27,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
 
   @doc false
-  def handle_prepare(%{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
+  def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
     case Membrane.Element.PortAudio.SinkNative.create(endpoint_id, buffer_size) do
       {:ok, native} ->
         {:ok, [
