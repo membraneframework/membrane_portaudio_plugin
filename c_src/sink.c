@@ -100,9 +100,9 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
   //
   // Instead we put the data into ringbuffer and write them in the callback.
   ring_buffer_size_t elements_written = PaUtil_WriteRingBuffer(sink_handle->ringbuffer, payload_binary.data, payload_binary.size / SAMPLE_SIZE_BYTES); // FIXME hardcoded 2 channels, 16 bit
-  MEMBRANE_DEBUG("Write: elements written = %d", elements_written);
+  // MEMBRANE_DEBUG("Write: elements written = %d", elements_written);
   if(elements_written != payload_binary.size / SAMPLE_SIZE_BYTES) {
-    MEMBRANE_DEBUG("Write: written only %d out of %lu bytes into ringbuffer", elements_written * SAMPLE_SIZE_BYTES, payload_binary.size);
+    // MEMBRANE_DEBUG("Write: written only %d out of %lu bytes into ringbuffer", elements_written * SAMPLE_SIZE_BYTES, payload_binary.size);
     return membrane_util_make_error(env, enif_make_atom(env, "discontinuity"));
 
   } else {
