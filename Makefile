@@ -1,6 +1,6 @@
-DARWIN_ERL_INCLUDE_PATH=/usr/local/Cellar/erlang/19.2/lib/erlang/usr/include/
-DARWIN_PORTAUDIO_INCLUDE_PATH=/usr/local/Cellar/portaudio/19.20140130/include/
-DARWIN_PORTAUDIO_LIB_PATH=/usr/local/Cellar/portaudio/19.20140130/lib/
+DARWIN_ERL_INCLUDE_PATH=/usr/local/Cellar/erlang/19.3/lib/erlang/usr/include/
+DARWIN_PORTAUDIO_INCLUDE_PATH=/usr/local/Cellar/portaudio/19.6.0/include/
+DARWIN_PORTAUDIO_LIB_PATH=/usr/local/Cellar/portaudio/19.6.0/lib/
 LINUX_ERL_INCLUDE_PATH=/usr/local/erlang/usr/include/
 
 
