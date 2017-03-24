@@ -62,7 +62,7 @@ static int callback(const void *input_buffer, void *output_buffer, unsigned long
   ring_buffer_size_t elements_available = PaUtil_GetRingBufferReadAvailable(sink_handle->ringbuffer);
   if(elements_available >= frames_per_buffer) {
     ring_buffer_size_t elements_read = PaUtil_ReadRingBuffer(sink_handle->ringbuffer, output_buffer, frames_per_buffer);
-    MEMBRANE_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
+    // MEMBRANE_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
 
   } else {
     memset(output_buffer, 0, frames_per_buffer * SAMPLE_SIZE_BYTES);
