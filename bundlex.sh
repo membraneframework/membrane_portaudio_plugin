@@ -1,3 +1,0 @@
-#!/bin/sh
-cc -fPIC -W -dynamiclib -undefined dynamic_lookup -o membrane_element_portaudio_source.so -I"/usr/local/Cellar/erlang/19.3/lib/erlang/usr/include" -I"../membrane_common_c/c_src" -I"./deps/membrane_common_c/c_src"  -I/opt/local/include -L/opt/local/lib -lportaudio -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon "c_src/source.c"
-cc -fPIC -W -dynamiclib -undefined dynamic_lookup -o membrane_element_portaudio_sink.so -I"/usr/local/Cellar/erlang/19.3/lib/erlang/usr/include" -I"../membrane_common_c/c_src" -I"./deps/membrane_common_c/c_src"  -I/opt/local/include -L/opt/local/lib -lportaudio -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon "c_src/pa_ringbuffer.c" "c_src/sink.c"
