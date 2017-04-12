@@ -3,12 +3,14 @@ defmodule Membrane.Element.PortAudio.SinkNative do
   This module is an interface to native PortAudio sink.
   """
 
+  require Bundlex.Loader
+
 
   @on_load :load_nifs
 
   @doc false
   def load_nifs do
-    :ok = :erlang.load_nif('./membrane_element_portaudio_sink', 0)
+    Bundlex.Loader.load_lib_nif!(:membrane_element_portaudio, :membrane_element_portaudio_sink)
   end
 
 
