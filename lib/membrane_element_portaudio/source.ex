@@ -7,7 +7,7 @@ defmodule Membrane.Element.PortAudio.Source do
   alias Membrane.Buffer
   alias Membrane.Element.PortAudio.SourceOptions
   alias Membrane.Element.PortAudio.SourceNative
-  
+
   # FIXME format is hardcoded at the moment
   @supported_caps %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}
 
@@ -39,6 +39,12 @@ defmodule Membrane.Element.PortAudio.Source do
       {:error, reason} ->
         {:error, {:create, reason}, state}
     end
+  end
+
+
+  @doc false
+  def handle_prepare(:playing, state) do
+    {:ok, %{state | native: nil}}
   end
 
 
