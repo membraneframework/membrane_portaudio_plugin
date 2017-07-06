@@ -33,7 +33,7 @@ defmodule Membrane.Element.PortAudio.Sink do
     case SinkNative.create(endpoint_id, buffer_size) do
       {:ok, native} ->
         {:ok, [
-          {:caps, {:sink, @supported_caps}}
+          # {:caps, {:sink, @supported_caps}}
         ], %{state | native: native}}
 
       {:error, reason} ->
