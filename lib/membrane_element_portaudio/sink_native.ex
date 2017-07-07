@@ -27,9 +27,9 @@ defmodule Membrane.Element.PortAudio.SinkNative do
 
   On sink initialization error, returns `{:error, {:create, reason}}`.
   """
-  @spec create(String.t | nil, non_neg_integer) ::
+  @spec create(String.t | nil, non_neg_integer, pid) ::
     {:ok, any} | {:error, {:args, atom, String.t}} | {:error, {:create, atom}}
-  def create(_endpoint_id, _buffer_size), do: raise "NIF fail"
+  def create(_endpoint_id, _buffer_size, _demand_handler), do: raise "NIF fail"
 
 
   @doc """

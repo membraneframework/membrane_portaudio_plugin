@@ -30,7 +30,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   @doc false
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    case SinkNative.create(endpoint_id, buffer_size) do
+    case SinkNative.create(endpoint_id, buffer_size, self()) do
       {:ok, native} ->
         {:ok, [
           # {:caps, {:sink, @supported_caps}}
@@ -47,6 +47,11 @@ defmodule Membrane.Element.PortAudio.Sink do
     {:ok, %{state | native: nil}}
   end
 
+  @doc false
+  def handle_other({:ringbuffer_demand, size} = msg, state) do
+    IO.inspect msg
+    {:ok, }
+  end
 
 
   @doc false

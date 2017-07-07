@@ -62,13 +62,30 @@ static int callback(const void *input_buffer, void *output_buffer, unsigned long
   ring_buffer_size_t elements_available = PaUtil_GetRingBufferReadAvailable(sink_handle->ringbuffer);
   if(elements_available >= frames_per_buffer) {
     ring_buffer_size_t elements_read = PaUtil_ReadRingBuffer(sink_handle->ringbuffer, output_buffer, frames_per_buffer);
-    // MEMBRANE_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
-
+    MEMBRANE_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
   } else {
     memset(output_buffer, 0, frames_per_buffer * SAMPLE_SIZE_BYTES);
   }
 
   return paContinue;
+}
+
+static void send_demand(unsigned int size, ErlNifPid* demand_handler) {
+  // Send packet upstream
+  ErlNifEnv* msg_env = enif_alloc_env();
+
+  ERL_NIF_TERM tuple[2] = {
+    enif_make_atom(msg_env, "ringbuffer_demand"),
+    enif_make_int(msg_env, (int)size),
+  };
+  ERL_NIF_TERM msg = enif_make_tuple_from_array(msg_env, tuple, 2);
+
+
+  if(!enif_send(NULL, demand_handler, msg_env, msg)) {
+    MEMBRANE_DEBUG("PortAudio sink: failed to send demand");
+  }
+
+  enif_free_env(msg_env);
 }
 
 
@@ -100,9 +117,9 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
   //
   // Instead we put the data into ringbuffer and write them in the callback.
   ring_buffer_size_t elements_written = PaUtil_WriteRingBuffer(sink_handle->ringbuffer, payload_binary.data, payload_binary.size / SAMPLE_SIZE_BYTES); // FIXME hardcoded 2 channels, 16 bit
-  // MEMBRANE_DEBUG("Write: elements written = %d", elements_written);
+  MEMBRANE_DEBUG("Write: elements written = %d", elements_written);
   if(elements_written != payload_binary.size / SAMPLE_SIZE_BYTES) {
-    // MEMBRANE_DEBUG("Write: written only %d out of %lu bytes into ringbuffer", elements_written * SAMPLE_SIZE_BYTES, payload_binary.size);
+    MEMBRANE_DEBUG("Write: written only %d out of %lu bytes into ringbuffer", elements_written * SAMPLE_SIZE_BYTES, payload_binary.size);
     return membrane_util_make_error(env, enif_make_atom(env, "discontinuity"));
 
   } else {
@@ -114,6 +131,7 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
   int               buffer_size;
+  ErlNifPid        *demand_handler;
   char              endpoint_id[64];
   SinkHandle       *sink_handle;
   PaError           error;
@@ -130,7 +148,9 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   if(!enif_get_int(env, argv[1], &buffer_size)) {
     return membrane_util_make_error_args(env, "buffer_duration", "Passed buffer size is out of integer range or is not an integer");
   }
-
+  if(!enif_get_local_pid(env, argv[2], &demand_handler)) {
+    return membrane_util_make_error_args(env, "demand_handler", "Passed demand_handler is not a valid pid");
+  }
 
   // Initialize handle
   sink_handle = (SinkHandle *) enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SinkHandle));
@@ -141,6 +161,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   // FIXME hardcoded format, stereo frame, 16bit
   sink_handle->ringbuffer_data = malloc(SAMPLE_SIZE_BYTES * RINGBUFFER_SIZE_ELEMENTS);
   sink_handle->ringbuffer = malloc(sizeof(PaUtilRingBuffer));
+  sink_handle->demand_handler = demand_handler;
   if(PaUtil_InitializeRingBuffer(sink_handle->ringbuffer, SAMPLE_SIZE_BYTES, RINGBUFFER_SIZE_ELEMENTS, sink_handle->ringbuffer_data) == -1) {
     MEMBRANE_DEBUG("PaUtil_InitializeRingBuffer: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
@@ -195,7 +216,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
 
 static ErlNifFunc nif_funcs[] =
 {
-  {"create", 2, export_create},
+  {"create", 3, export_create},
   {"write", 2, export_write}
 };
 
