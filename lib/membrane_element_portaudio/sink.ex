@@ -48,9 +48,9 @@ defmodule Membrane.Element.PortAudio.Sink do
   end
 
   @doc false
-  def handle_other({:ringbuffer_demand, size} = msg, state) do
+  def handle_other({:ringbuffer_demand, _size} = msg, state) do
     IO.inspect msg
-    {:ok, }
+    {:ok, state}
   end
 
 
