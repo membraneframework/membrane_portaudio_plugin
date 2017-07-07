@@ -12,7 +12,7 @@ defmodule Membrane.Element.PortAudio.Source do
   @supported_caps %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}
 
   def_known_source_pads %{
-    :source => {:always, [@supported_caps]}
+    :source => {:always, :push, [@supported_caps]}
   }
 
 
@@ -30,52 +30,43 @@ defmodule Membrane.Element.PortAudio.Source do
 
   @doc false
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    case SourceNative.create(endpoint_id, self(), buffer_size) do
-      {:ok, native} ->
-        {:ok, [
+    with {:ok, native} <- SourceNative.create(endpoint_id, self(), buffer_size)
+    do {:ok, {[
           {:caps, {:source, @supported_caps}}
-        ], %{state | native: native}}
-
-      {:error, reason} ->
-        {:error, {:create, reason}, state}
+        ], %{state | native: native}}}
+    else {:error, reason} -> {:error, {:create, reason}, state}
     end
   end
 
 
   @doc false
   def handle_prepare(:playing, state) do
-    {:ok, %{state | native: nil}}
+    {:ok, {[], %{state | native: nil}}}
   end
 
 
   @doc false
   def handle_play(%{native: native} = state) do
-    case SourceNative.start(native) do
-      :ok ->
-        {:ok, state}
-
-      {:error, reason} ->
-        {:error, {:start, reason}, state}
+    with :ok <- SourceNative.start(native)
+    do {:ok, {[], state}}
+    else {:error, reason} -> {:error, {:start, reason}, state}
     end
   end
 
 
   @doc false
   def handle_stop(%{native: native} = state) do
-    case SourceNative.stop(native) do
-      :ok ->
-        {:ok, state}
-
-      {:error, reason} ->
-        {:error, {:stop, reason}, state}
+    with :ok <- SourceNative.start(native)
+    do {:ok, {[], state}}
+    else {:error, reason} -> {:error, {:stop, reason}, state}
     end
   end
 
 
   @doc false
   def handle_other({:membrane_element_portaudio_source_packet, payload}, state) do
-    {:ok, [
-      {:send, {:source, %Buffer{payload: payload}}},
-    ], state}
+    {:ok, {[
+      {:buffer, {:source, %Buffer{payload: payload}}},
+    ], state}}
   end
 end

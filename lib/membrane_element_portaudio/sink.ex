@@ -7,12 +7,13 @@ defmodule Membrane.Element.PortAudio.Sink do
   alias Membrane.Buffer
   alias Membrane.Element.PortAudio.SinkNative
   alias Membrane.Element.PortAudio.SinkOptions
+  use Membrane.Mixins.Log
 
   # FIXME format is hardcoded at the moment
   @supported_caps %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}
 
   def_known_sink_pads %{
-    :sink => {:always, [@supported_caps]}
+    :sink => {:always, :pull, [@supported_caps]}
   }
 
 
@@ -30,38 +31,32 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   @doc false
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    case SinkNative.create(endpoint_id, buffer_size, self()) do
-      {:ok, native} ->
-        {:ok, [
-          # {:caps, {:sink, @supported_caps}}
-        ], %{state | native: native}}
-
-      {:error, reason} ->
-        {:error, {:create, reason}, state}
+    with {:ok, native} <- SinkNative.create(endpoint_id, buffer_size, self())
+    do {:ok, {[
+          # {:caps, {:sink, @supported_caps}} # WTF?
+        ], %{state | native: native}}}
+    else {:error, reason} -> {:error, {:create, reason}, state}
     end
   end
 
 
   @doc false
   def handle_prepare(:playing, state) do
-    {:ok, %{state | native: nil}}
+    {:ok, {[], %{state | native: nil}}}
   end
 
   @doc false
   def handle_other({:ringbuffer_demand, _size} = msg, state) do
-    IO.inspect msg
-    {:ok, state}
+    debug msg
+    {:ok, {[{:demand, :sink}], state}}
   end
 
 
   @doc false
-  def handle_buffer(:sink, _caps, %Buffer{payload: payload}, %{native: native} = state) do
-    case SinkNative.write(native, payload) do
-      :ok ->
-        {:ok, [], state}
-
-      {:error, reason} ->
-        {:error, {:write, reason}, state}
+  def handle_write(:sink, %Buffer{payload: payload}, _, %{native: native} = state) do
+    with :ok <- SinkNative.write(native, payload)
+    do {:ok, {[], state}}
+    else {:error, reason} -> {:error, {:write, reason}, state}
     end
   end
 end
