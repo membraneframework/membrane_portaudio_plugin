@@ -46,14 +46,14 @@ defmodule Membrane.Element.PortAudio.Sink do
   end
 
   @doc false
-  def handle_other({:ringbuffer_demand, _size} = msg, state) do
-    debug msg
-    {:ok, {[{:demand, :sink}], state}}
+  def handle_other({:ringbuffer_demand, size} = msg, state) do
+    debug inspect msg
+    {:ok, {[{:demand, {:sink, size |> div(512)}}], state}}
   end
 
 
   @doc false
-  def handle_write(:sink, %Buffer{payload: payload}, _, %{native: native} = state) do
+  def handle_write1(:sink, %Buffer{payload: payload}, _, %{native: native} = state) do
     with :ok <- SinkNative.write(native, payload)
     do {:ok, {[], state}}
     else {:error, reason} -> {:error, {:write, reason}, state}
