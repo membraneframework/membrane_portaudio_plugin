@@ -203,6 +203,8 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   }
 
 
+  send_demand((unsigned int)buffer_size, sink_handle->demand_handler);
+
   // Store handle as an erlang resource
   ERL_NIF_TERM sink_handle_term = enif_make_resource(env, sink_handle);
   enif_release_resource(sink_handle);
