@@ -5,18 +5,18 @@ defmodule Membrane.Element.PortAudio.Source do
 
   use Membrane.Element.Base.Source
   alias Membrane.Buffer
-  alias Membrane.Element.PortAudio.SourceOptions
   alias __MODULE__.Native
   alias Membrane.Caps.Audio.Raw, as: Caps
 
 
   def_known_source_pads source: {:always, :push, {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
-
-  # Private API
+  #FIXME: improve endpoint_id option
+  def_options endpoint_id: [type: :string, spec: String.t | nil, default: nil, description: "Portaudio sound card id"],
+  buffer_size: [type: :integer, spec: pos_integer, default: 256, description: "Size of each incoming buffer (in frames)"]
 
   @impl true
-  def handle_init(%SourceOptions{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
+  def handle_init(%__MODULE__{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
     {:ok, %{
       endpoint_id: endpoint_id,
       buffer_size: buffer_size,

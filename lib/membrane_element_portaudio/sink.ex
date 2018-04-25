@@ -6,16 +6,19 @@ defmodule Membrane.Element.PortAudio.Sink do
   use Membrane.Element.Base.Sink
   alias Membrane.Buffer
   alias __MODULE__.Native
-  alias Membrane.Element.PortAudio.SinkOptions
   alias Membrane.Caps.Audio.Raw, as: Caps
   use Membrane.Mixins.Log
 
   def_known_sink_pads sink: {:always, :pull, {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
-  # Private API
+
+  #FIXME: improve endpoint_id option
+  def_options endpoint_id: [type: :string, spec: String.t | nil, default: nil, description: "Portaudio sound card id"], 
+  buffer_size: [type: :integer, spec: pos_integer, default: 256, description: "Size of the ringbuffer (in frames)"]
+
 
   @impl true
-  def handle_init(%SinkOptions{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
+  def handle_init(%__MODULE__{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
     {:ok, %{
       endpoint_id: endpoint_id,
       buffer_size: buffer_size,
