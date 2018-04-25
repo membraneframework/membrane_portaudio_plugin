@@ -7,8 +7,6 @@
 
 #include "source.h"
 
-#define MEMBRANE_LOG_TAG  "Membrane.Element.PortAudio.SourceNative"
-
 
 ErlNifResourceType *RES_SOURCE_HANDLE_TYPE;
 
@@ -17,23 +15,23 @@ static void res_source_handle_destructor(ErlNifEnv *env, void *value) {
   PaError error;
   SourceHandle *source_handle = (SourceHandle *) value;
 
-  MEMBRANE_DEBUG("Destroying SourceHandle %p", value);
+  MEMBRANE_DEBUG(env, "Destroying SourceHandle %p", value);
 
   if(Pa_IsStreamStopped(source_handle->stream) == 0) {
     error = Pa_StopStream(source_handle->stream);
     if(error != paNoError) {
-      MEMBRANE_DEBUG("Pa_StopStream: error = %d (%s)", error, Pa_GetErrorText(error));
+      MEMBRANE_WARN(env, "Pa_StopStream: error = %d (%s)", error, Pa_GetErrorText(error));
     }
   }
 
   error = Pa_CloseStream(source_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_CloseStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_CloseStream: error = %d (%s)", error, Pa_GetErrorText(error));
   }
 
   error = Pa_Terminate();
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_Terminate: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", error, Pa_GetErrorText(error));
   }
 }
 
@@ -70,7 +68,7 @@ static int callback(const void *input_buffer, void *output_buffer, unsigned long
 
 
   if(!enif_send(NULL, source_handle->destination, msg_env, msg)) {
-    MEMBRANE_DEBUG("Capture: packet send failed");
+    MEMBRANE_THREADED_WARN("Capture: packet send failed");
   }
 
   enif_free_env(msg_env);
@@ -94,7 +92,7 @@ static ERL_NIF_TERM export_start(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
   // Start the stream
   error = Pa_StartStream(source_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "pastartstream");
   }
 
@@ -119,7 +117,7 @@ static ERL_NIF_TERM export_stop(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   // Stop the stream
   error = Pa_StopStream(source_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "paclosestream");
   }
 
@@ -161,7 +159,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
 
   // Initialize handle
   source_handle = (SourceHandle *) enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SourceHandle));
-  MEMBRANE_DEBUG("Creating SourceHandle %p", source_handle);
+  MEMBRANE_DEBUG(env, "Creating SourceHandle %p", source_handle);
 
   source_handle->destination = destination;
 
@@ -169,7 +167,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   // Initialize PortAudio
   error = Pa_Initialize();
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "painitialize");
   }
 
@@ -185,7 +183,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
                               source_handle); // user data passed to the callback
 
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "paopendefaultstream");
   }
 
@@ -202,10 +200,10 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
 
 static ErlNifFunc nif_funcs[] =
 {
-  {"create", 3, export_create},
-  {"start", 1, export_start},
-  {"stop", 1, export_stop}
+  {"create", 3, export_create, 0},
+  {"start", 1, export_start, 0},
+  {"stop", 1, export_stop, 0}
 };
 
 
-ERL_NIF_INIT(Elixir.Membrane.Element.PortAudio.SourceNative, nif_funcs, load, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.Membrane.Element.PortAudio.Source.Native.Nif, nif_funcs, load, NULL, NULL, NULL)

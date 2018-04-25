@@ -6,19 +6,16 @@ defmodule Membrane.Element.PortAudio.Source do
   use Membrane.Element.Base.Source
   alias Membrane.Buffer
   alias Membrane.Element.PortAudio.SourceOptions
-  alias Membrane.Element.PortAudio.SourceNative
+  alias __MODULE__.Native
+  alias Membrane.Caps.Audio.Raw, as: Caps
 
-  # FIXME format is hardcoded at the moment
-  @supported_caps %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}
 
-  def_known_source_pads %{
-    :source => {:always, :push, [@supported_caps]}
-  }
+  def_known_source_pads source: {:always, :push, {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
 
   # Private API
 
-  @doc false
+  @impl true
   def handle_init(%SourceOptions{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
     {:ok, %{
       endpoint_id: endpoint_id,
@@ -28,42 +25,42 @@ defmodule Membrane.Element.PortAudio.Source do
   end
 
 
-  @doc false
+  @impl true
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    with {:ok, native} <- SourceNative.create(endpoint_id, self(), buffer_size)
+    with {:ok, native} <- Native.create(endpoint_id, self(), buffer_size)
     do {:ok, {[
-          {:caps, {:source, @supported_caps}}
+          {:caps, {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}}
         ], %{state | native: native}}}
     else {:error, reason} -> {:error, {:create, reason}, state}
     end
   end
 
 
-  @doc false
+  @impl true
   def handle_prepare(:playing, state) do
     {:ok, {[], %{state | native: nil}}}
   end
 
 
-  @doc false
+  @impl true
   def handle_play(%{native: native} = state) do
-    with :ok <- SourceNative.start(native)
+    with :ok <- Native.start(native)
     do {:ok, {[], state}}
     else {:error, reason} -> {:error, {:start, reason}, state}
     end
   end
 
 
-  @doc false
+  @impl true
   def handle_stop(%{native: native} = state) do
-    with :ok <- SourceNative.start(native)
+    with :ok <- Native.start(native)
     do {:ok, {[], state}}
     else {:error, reason} -> {:error, {:stop, reason}, state}
     end
   end
 
 
-  @doc false
+  @impl true
   def handle_other({:membrane_element_portaudio_source_packet, payload}, state) do
     {:ok, {[
       {:buffer, {:source, %Buffer{payload: payload}}},

@@ -1,17 +1,9 @@
-defmodule Membrane.Element.PortAudio.SinkNative do
+defmodule Membrane.Element.PortAudio.Sink.Native do
   @moduledoc """
   This module is an interface to native PortAudio sink.
   """
 
-  require Bundlex.Loader
-
-
-  @on_load :load_nifs
-
-  @doc false
-  def load_nifs do
-    Bundlex.Loader.load_lib_nif!(:membrane_element_portaudio, :membrane_element_portaudio_sink)
-  end
+  use Bundlex.Loader, nif: :sink
 
 
   @doc """
@@ -29,7 +21,7 @@ defmodule Membrane.Element.PortAudio.SinkNative do
   """
   @spec create(String.t | nil, non_neg_integer, pid) ::
     {:ok, any} | {:error, {:args, atom, String.t}} | {:error, {:create, atom}}
-  def create(_endpoint_id, _buffer_size, _demand_handler), do: raise "NIF fail"
+  defnif create(endpoint_id, buffer_size, demand_handler)
 
 
   @doc """
@@ -48,5 +40,5 @@ defmodule Membrane.Element.PortAudio.SinkNative do
   """
   @spec write(any, %Membrane.Buffer{}) ::
     :ok | {:error, {:args, atom, String.t}} | {:error, {:internal, atom}}
-  def write(_handle, _buffer), do: raise "NIF fail"
+  defnif write(handle, buffer)
 end

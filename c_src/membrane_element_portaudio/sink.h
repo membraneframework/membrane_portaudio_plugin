@@ -13,6 +13,8 @@
 #include <erl_nif.h>
 #include <portaudio.h>
 #include <membrane/membrane.h>
+#define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Sink.Native"
+#include <membrane/log.h>
 
 #include "pa_ringbuffer.h"
 

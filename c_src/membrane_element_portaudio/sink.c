@@ -7,7 +7,6 @@
 
 #include "sink.h"
 
-#define MEMBRANE_LOG_TAG         "Membrane.Element.PortAudio.SinkNative"
 #define SAMPLE_SIZE_BYTES        4
 #define RINGBUFFER_SIZE_ELEMENTS 4096
 
@@ -18,23 +17,23 @@ static void res_sink_handle_destructor(ErlNifEnv *env, void *value) {
   PaError error;
   SinkHandle *sink_handle = (SinkHandle *) value;
 
-  MEMBRANE_DEBUG("Destroying SinkHandle %p", value);
+  MEMBRANE_DEBUG(env, "Destroying SinkHandle %p", value);
 
   if(Pa_IsStreamStopped(sink_handle->stream) == 0) {
     error = Pa_StopStream(sink_handle->stream);
     if(error != paNoError) {
-      MEMBRANE_DEBUG("Pa_StopStream: error = %d (%s)", error, Pa_GetErrorText(error));
+      MEMBRANE_WARN(env, "Pa_StopStream: error = %d (%s)", error, Pa_GetErrorText(error));
     }
   }
 
   error = Pa_CloseStream(sink_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_CloseStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_CloseStream: error = %d (%s)", error, Pa_GetErrorText(error));
   }
 
   error = Pa_Terminate();
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_Terminate: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", error, Pa_GetErrorText(error));
   }
 
   if(sink_handle->ringbuffer_data != NULL) {
@@ -65,7 +64,7 @@ static void send_demand(unsigned int size, ErlNifPid* demand_handler) {
   ERL_NIF_TERM msg = enif_make_tuple_from_array(msg_env, tuple, 2);
 
   if(!enif_send(NULL, demand_handler, msg_env, msg)) {
-    MEMBRANE_DEBUG("PortAudio sink: failed to send demand");
+    MEMBRANE_THREADED_WARN("PortAudio sink: failed to send demand");
   }
 
   enif_free_env(msg_env);
@@ -78,7 +77,7 @@ static int callback(const void *input_buffer, void *output_buffer, unsigned long
   ring_buffer_size_t elements_available = PaUtil_GetRingBufferReadAvailable(sink_handle->ringbuffer);
   if(elements_available >= frames_per_buffer) {
     ring_buffer_size_t elements_read = PaUtil_ReadRingBuffer(sink_handle->ringbuffer, output_buffer, frames_per_buffer);
-    MEMBRANE_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
+    MEMBRANE_THREADED_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
     send_demand(elements_read, sink_handle->demand_handler);
   } else {
     memset(output_buffer, 0, frames_per_buffer * SAMPLE_SIZE_BYTES);
@@ -116,9 +115,9 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
   //
   // Instead we put the data into ringbuffer and write them in the callback.
   ring_buffer_size_t elements_written = PaUtil_WriteRingBuffer(sink_handle->ringbuffer, payload_binary.data, payload_binary.size / SAMPLE_SIZE_BYTES); // FIXME hardcoded 2 channels, 16 bit
-  // MEMBRANE_DEBUG("Write: elements written = %d", elements_written);
+  // MEMBRANE_DEBUG(env, "Write: elements written = %d", elements_written);
   if(elements_written != payload_binary.size / SAMPLE_SIZE_BYTES) {
-    MEMBRANE_DEBUG("Write: written only %d out of %lu bytes into ringbuffer", elements_written * SAMPLE_SIZE_BYTES, payload_binary.size);
+    MEMBRANE_WARN(env, "Write: written only %d out of %lu bytes into ringbuffer", elements_written * SAMPLE_SIZE_BYTES, payload_binary.size);
     return membrane_util_make_error(env, enif_make_atom(env, "discontinuity"));
 
   } else {
@@ -153,7 +152,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
 
   // Initialize handle
   sink_handle = (SinkHandle *) enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SinkHandle));
-  MEMBRANE_DEBUG("Creating SinkHandle %p", sink_handle);
+  MEMBRANE_DEBUG(env, "Creating SinkHandle %p", sink_handle);
 
 
   // Initialize ringbuffer
@@ -162,7 +161,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   sink_handle->ringbuffer = malloc(sizeof(PaUtilRingBuffer));
   sink_handle->demand_handler = demand_handler;
   if(PaUtil_InitializeRingBuffer(sink_handle->ringbuffer, SAMPLE_SIZE_BYTES, RINGBUFFER_SIZE_ELEMENTS, sink_handle->ringbuffer_data) == -1) {
-    MEMBRANE_DEBUG("PaUtil_InitializeRingBuffer: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "PaUtil_InitializeRingBuffer: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "pautilinitializeringbuffer");
   }
@@ -171,7 +170,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   // Initialize PortAudio
   error = Pa_Initialize();
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "painitialize");
   }
@@ -188,7 +187,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
                               sink_handle);   // user data passed to the callback
 
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "paopendefaultstream");
   }
@@ -197,7 +196,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   // Start the stream
   error = Pa_StartStream(sink_handle->stream);
   if(error != paNoError) {
-    MEMBRANE_DEBUG("Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "pastartstream");
   }
@@ -217,9 +216,9 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
 
 static ErlNifFunc nif_funcs[] =
 {
-  {"create", 3, export_create},
-  {"write", 2, export_write}
+  {"create", 3, export_create, 0},
+  {"write", 2, export_write, 0}
 };
 
 
-ERL_NIF_INIT(Elixir.Membrane.Element.PortAudio.SinkNative, nif_funcs, load, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.Membrane.Element.PortAudio.Sink.Native.Nif, nif_funcs, load, NULL, NULL, NULL)

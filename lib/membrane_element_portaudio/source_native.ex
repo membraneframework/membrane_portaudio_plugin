@@ -1,17 +1,9 @@
-defmodule Membrane.Element.PortAudio.SourceNative do
+defmodule Membrane.Element.PortAudio.Source.Native do
   @moduledoc """
   This module is an interface to native PortAudio source.
   """
 
-  require Bundlex.Loader
-
-
-  @on_load :load_nifs
-
-  @doc false
-  def load_nifs do
-    Bundlex.Loader.load_lib_nif!(:membrane_element_portaudio, :membrane_element_portaudio_source)
-  end
+  use Bundlex.Loader, nif: :source
 
 
   @doc """
@@ -29,7 +21,7 @@ defmodule Membrane.Element.PortAudio.SourceNative do
   """
   @spec create(String.t | nil, pid, non_neg_integer) ::
     {:ok, any} | {:error, {:args, atom, String.t}} | {:error, {:create, atom}}
-  def create(_endpoint_id, _destination, _buffer_size), do: raise "NIF fail"
+  defnif create(endpoint_id, destination, buffer_size)
 
 
   @doc """
@@ -47,7 +39,7 @@ defmodule Membrane.Element.PortAudio.SourceNative do
   """
   @spec start(any) ::
     :ok | {:error, {:args, atom, String.t}} | {:error, {:internal, atom}}
-  def start(_handle), do: raise "NIF fail"
+  defnif start(handle)
 
 
   @doc """
@@ -65,6 +57,6 @@ defmodule Membrane.Element.PortAudio.SourceNative do
   """
   @spec stop(any) ::
     :ok | {:error, {:args, atom, String.t}} | {:error, {:internal, atom}}
-  def stop(_handle), do: raise "NIF fail"
+  defnif stop(handle)
 
 end

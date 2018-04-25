@@ -1,9 +1,10 @@
 defmodule Membrane.Element.PortAudio.Mixfile do
   use Mix.Project
+  Application.put_env(:bundlex, :membrane_element_portaudio, __ENV__)
 
   def project do
     [app: :membrane_element_portaudio,
-     compilers: ~w(bundlex.lib) ++ Mix.compilers,
+     compilers: [:bundlex] ++ Mix.compilers,
      version: "0.0.1",
      elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
@@ -18,9 +19,7 @@ defmodule Membrane.Element.PortAudio.Mixfile do
 
 
   def application do
-    [applications: [
-      :membrane_core
-    ], mod: {Membrane.Element.PortAudio, []}]
+    [extra_applications: [], mod: {Membrane.Element.PortAudio, []}]
   end
 
 
@@ -30,7 +29,7 @@ defmodule Membrane.Element.PortAudio.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, git: "git@github.com:membraneframework/membrane-core.git", branch: "feature/pull"},
+      {:membrane_core, git: "git@github.com:membraneframework/membrane-core.git"},
       {:membrane_common_c, git: "git@github.com:membraneframework/membrane-common-c.git"},
       {:membrane_caps_audio_raw, git: "git@github.com:membraneframework/membrane-caps-audio-raw.git"},
       {:bundlex, git: "git@github.com:radiokit/bundlex.git"},
