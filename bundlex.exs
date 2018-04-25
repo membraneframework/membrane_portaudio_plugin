@@ -3,7 +3,7 @@ defmodule MyApp.BundlexProject do
 
   def project() do
     [
-      nifs: nifs(Bundlex.platform)
+      nifs: nifs(Bundlex.platform())
     ]
   end
 

@@ -9,34 +9,44 @@ defmodule Membrane.Element.PortAudio.Sink do
   alias Membrane.Caps.Audio.Raw, as: Caps
   use Membrane.Mixins.Log
 
-  def_known_sink_pads sink: {:always, :pull, {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
+  def_known_sink_pads sink:
+                        {:always, :pull, {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
-
-  #FIXME: improve endpoint_id option
-  def_options endpoint_id: [type: :string, spec: String.t | nil, default: nil, description: "Portaudio sound card id"], 
-  buffer_size: [type: :integer, spec: pos_integer, default: 256, description: "Size of the ringbuffer (in frames)"]
-
+  # FIXME: improve endpoint_id option
+  def_options endpoint_id: [
+                type: :string,
+                spec: String.t() | nil,
+                default: nil,
+                description: "Portaudio sound card id"
+              ],
+              buffer_size: [
+                type: :integer,
+                spec: pos_integer,
+                default: 256,
+                description: "Size of the ringbuffer (in frames)"
+              ]
 
   @impl true
   def handle_init(%__MODULE__{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
-    {:ok, %{
-      endpoint_id: endpoint_id,
-      buffer_size: buffer_size,
-      native: nil,
-    }}
+    {:ok,
+     %{
+       endpoint_id: endpoint_id,
+       buffer_size: buffer_size,
+       native: nil
+     }}
   end
-
 
   @impl true
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    with {:ok, native} <- Native.create(endpoint_id, buffer_size, self())
-    do {:ok, {[
+    with {:ok, native} <- Native.create(endpoint_id, buffer_size, self()) do
+      {:ok,
+       {[
           # {:caps, {:sink, @supported_caps}} # WTF?
         ], %{state | native: native}}}
-    else {:error, reason} -> {:error, {:create, reason}, state}
+    else
+      {:error, reason} -> {:error, {:create, reason}, state}
     end
   end
-
 
   @impl true
   def handle_prepare(:playing, state) do
@@ -45,16 +55,16 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   @impl true
   def handle_other({:ringbuffer_demand, size} = msg, state) do
-    debug inspect msg
+    debug(inspect(msg))
     {:ok, {[{:demand, {:sink, size |> div(state.buffer_size)}}], state}}
   end
 
-
   @impl true
   def handle_write1(:sink, %Buffer{payload: payload}, _, %{native: native} = state) do
-    with :ok <- Native.write(native, payload)
-    do {:ok, {[], state}}
-    else {:error, reason} -> {:error, {:write, reason}, state}
+    with :ok <- Native.write(native, payload) do
+      {:ok, {[], state}}
+    else
+      {:error, reason} -> {:error, {:write, reason}, state}
     end
   end
 end

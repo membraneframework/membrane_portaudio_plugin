@@ -5,7 +5,6 @@ defmodule Membrane.Element.PortAudio.Sink.Native do
 
   use Bundlex.Loader, nif: :sink
 
-
   @doc """
   Creates PortAudio sink.
 
@@ -19,10 +18,9 @@ defmodule Membrane.Element.PortAudio.Sink.Native do
 
   On sink initialization error, returns `{:error, {:create, reason}}`.
   """
-  @spec create(String.t | nil, non_neg_integer, pid) ::
-    {:ok, any} | {:error, {:args, atom, String.t}} | {:error, {:create, atom}}
+  @spec create(String.t() | nil, non_neg_integer, pid) ::
+          {:ok, any} | {:error, {:args, atom, String.t()}} | {:error, {:create, atom}}
   defnif create(endpoint_id, buffer_size, demand_handler)
-
 
   @doc """
   Writes data to the PortAudio sink.
@@ -39,6 +37,6 @@ defmodule Membrane.Element.PortAudio.Sink.Native do
   On internal error, returns `{:error, {:write, reason}}`.
   """
   @spec write(any, %Membrane.Buffer{}) ::
-    :ok | {:error, {:args, atom, String.t}} | {:error, {:internal, atom}}
+          :ok | {:error, {:args, atom, String.t()}} | {:error, {:internal, atom}}
   defnif write(handle, buffer)
 end

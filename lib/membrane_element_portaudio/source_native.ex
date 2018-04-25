@@ -5,7 +5,6 @@ defmodule Membrane.Element.PortAudio.Source.Native do
 
   use Bundlex.Loader, nif: :source
 
-
   @doc """
   Creates PortAudio source.
 
@@ -19,10 +18,9 @@ defmodule Membrane.Element.PortAudio.Source.Native do
 
   On source initialization error, returns `{:error, {:create, reason}}`.
   """
-  @spec create(String.t | nil, pid, non_neg_integer) ::
-    {:ok, any} | {:error, {:args, atom, String.t}} | {:error, {:create, atom}}
+  @spec create(String.t() | nil, pid, non_neg_integer) ::
+          {:ok, any} | {:error, {:args, atom, String.t()}} | {:error, {:create, atom}}
   defnif create(endpoint_id, destination, buffer_size)
-
 
   @doc """
   Starts PortAudio source.
@@ -37,10 +35,8 @@ defmodule Membrane.Element.PortAudio.Source.Native do
 
   On internal error, returns `{:error, {:internal, reason}}`.
   """
-  @spec start(any) ::
-    :ok | {:error, {:args, atom, String.t}} | {:error, {:internal, atom}}
+  @spec start(any) :: :ok | {:error, {:args, atom, String.t()}} | {:error, {:internal, atom}}
   defnif start(handle)
-
 
   @doc """
   Stops PortAudio source.
@@ -55,8 +51,6 @@ defmodule Membrane.Element.PortAudio.Source.Native do
 
   On internal error, returns `{:error, {:internal, reason}}`.
   """
-  @spec stop(any) ::
-    :ok | {:error, {:args, atom, String.t}} | {:error, {:internal, atom}}
+  @spec stop(any) :: :ok | {:error, {:args, atom, String.t()}} | {:error, {:internal, atom}}
   defnif stop(handle)
-
 end
