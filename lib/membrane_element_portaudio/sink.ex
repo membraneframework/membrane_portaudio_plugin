@@ -9,8 +9,11 @@ defmodule Membrane.Element.PortAudio.Sink do
   alias Membrane.Caps.Audio.Raw, as: Caps
   use Membrane.Mixins.Log
 
+  @frame_size 4
+
   def_known_sink_pads sink:
-                        {:always, :pull, {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
+                        {:always, {:pull, demand_in: :bytes},
+                         {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
   # FIXME: improve endpoint_id option
   def_options endpoint_id: [
@@ -37,7 +40,7 @@ defmodule Membrane.Element.PortAudio.Sink do
   end
 
   @impl true
-  def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
+  def handle_play(%{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
     with {:ok, native} <- Native.create(endpoint_id, buffer_size, self()) do
       {:ok, %{state | native: native}}
     else
@@ -50,9 +53,13 @@ defmodule Membrane.Element.PortAudio.Sink do
     {:ok, %{state | native: nil}}
   end
 
+  def handle_prepare(_, state) do
+    {:ok, state}
+  end
+
   @impl true
   def handle_other({:ringbuffer_demand, size}, state) do
-    {{:ok, demand: {:sink, size |> div(state.buffer_size)}}, state}
+    {{:ok, demand: {:sink, size * @frame_size}}, state}
   end
 
   @impl true
