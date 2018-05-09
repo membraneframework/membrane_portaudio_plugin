@@ -53,6 +53,7 @@ defmodule Membrane.Element.PortAudio.Sink do
     {:ok, %{state | native: nil}}
   end
 
+  @impl true
   def handle_prepare(_, state) do
     {:ok, state}
   end

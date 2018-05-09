@@ -39,7 +39,8 @@ defmodule Membrane.Element.PortAudio.Source do
   @impl true
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
     with {:ok, native} <- Native.create(endpoint_id, self(), buffer_size) do
-      {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}}, %{state | native: native}}
+      {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}},
+       %{state | native: native}}
     else
       {:error, reason} -> {{:error, reason}, state}
     end
