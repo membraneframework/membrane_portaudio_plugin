@@ -39,43 +39,29 @@ defmodule Membrane.Element.PortAudio.Source do
   @impl true
   def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
     with {:ok, native} <- Native.create(endpoint_id, self(), buffer_size) do
-      {:ok,
-       {[
-          {:caps, {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}}
-        ], %{state | native: native}}}
+      {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}}, %{state | native: native}}
     else
-      {:error, reason} -> {:error, {:create, reason}, state}
+      {:error, reason} -> {{:error, reason}, state}
     end
   end
 
   @impl true
   def handle_prepare(:playing, state) do
-    {:ok, {[], %{state | native: nil}}}
+    {:ok, %{state | native: nil}}
   end
 
   @impl true
   def handle_play(%{native: native} = state) do
-    with :ok <- Native.start(native) do
-      {:ok, {[], state}}
-    else
-      {:error, reason} -> {:error, {:start, reason}, state}
-    end
+    {Native.start(native), state}
   end
 
   @impl true
   def handle_stop(%{native: native} = state) do
-    with :ok <- Native.start(native) do
-      {:ok, {[], state}}
-    else
-      {:error, reason} -> {:error, {:stop, reason}, state}
-    end
+    {Native.stop(native), state}
   end
 
   @impl true
   def handle_other({:membrane_element_portaudio_source_packet, payload}, state) do
-    {:ok,
-     {[
-        {:buffer, {:source, %Buffer{payload: payload}}}
-      ], state}}
+    {{:ok, buffer: {:source, %Buffer{payload: payload}}}, state}
   end
 end
