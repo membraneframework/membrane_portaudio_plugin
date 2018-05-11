@@ -15,8 +15,9 @@
 #include <membrane/membrane.h>
 #define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Sink.Native"
 #include <membrane/log.h>
+#include <membrane_ringbuffer/ringbuffer.h>
 
-#include "pa_ringbuffer.h"
+// #include "pa_ringbuffer.h"
 
 
 typedef struct _SinkHandle SinkHandle;
@@ -24,8 +25,7 @@ typedef struct _SinkHandle SinkHandle;
 struct _SinkHandle
 {
   PaStream         *stream;           // Port Audio stream
-  PaUtilRingBuffer *ringbuffer;       // Ring buffer that will keep data before it is written to the sound card
-  void             *ringbuffer_data;  // Ring buffer's memory
+  MembraneRingBuffer *ringbuffer;
   ErlNifPid        *demand_handler;  // Where to send demands
 };
 

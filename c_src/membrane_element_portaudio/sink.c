@@ -36,12 +36,8 @@ static void res_sink_handle_destructor(ErlNifEnv *env, void *value) {
     MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", error, Pa_GetErrorText(error));
   }
 
-  if(sink_handle->ringbuffer_data != NULL) {
-    free(sink_handle->ringbuffer_data);
-  }
-
-  if(sink_handle->ringbuffer != NULL) {
-    free(sink_handle->ringbuffer);
+  if(sink_handle->ringbuffer) {
+    membrane_ringbuffer_destroy(sink_handle->ringbuffer);
   }
 }
 
@@ -74,9 +70,9 @@ static void send_demand(unsigned int size, ErlNifPid* demand_handler) {
 static int callback(const void *input_buffer, void *output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void *user_data) {
   SinkHandle *sink_handle = (SinkHandle *) user_data;
 
-  ring_buffer_size_t elements_available = PaUtil_GetRingBufferReadAvailable(sink_handle->ringbuffer);
+  size_t elements_available = membrane_ringbuffer_get_read_available(sink_handle->ringbuffer);
   if(elements_available >= frames_per_buffer) {
-    ring_buffer_size_t elements_read = PaUtil_ReadRingBuffer(sink_handle->ringbuffer, output_buffer, frames_per_buffer);
+    size_t elements_read = membrane_ringbuffer_read(sink_handle->ringbuffer, output_buffer, frames_per_buffer);
     MEMBRANE_THREADED_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
     send_demand(elements_read, sink_handle->demand_handler);
   } else {
@@ -114,7 +110,7 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
   //    and if it takes long time erlang scheduler will go crazy.
   //
   // Instead we put the data into ringbuffer and write them in the callback.
-  ring_buffer_size_t elements_written = PaUtil_WriteRingBuffer(sink_handle->ringbuffer, payload_binary.data, payload_binary.size / SAMPLE_SIZE_BYTES); // FIXME hardcoded 2 channels, 16 bit
+  size_t elements_written = membrane_ringbuffer_write(sink_handle->ringbuffer, payload_binary.data, payload_binary.size / SAMPLE_SIZE_BYTES); // FIXME hardcoded 2 channels, 16 bit
   // MEMBRANE_DEBUG(env, "Write: elements written = %d", elements_written);
   if(elements_written != payload_binary.size / SAMPLE_SIZE_BYTES) {
     MEMBRANE_WARN(env, "Write: written only %d out of %lu bytes into ringbuffer", elements_written * SAMPLE_SIZE_BYTES, payload_binary.size);
@@ -154,17 +150,21 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
   sink_handle = (SinkHandle *) enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SinkHandle));
   MEMBRANE_DEBUG(env, "Creating SinkHandle %p", sink_handle);
 
+  sink_handle->demand_handler = demand_handler;
 
   // Initialize ringbuffer
   // FIXME hardcoded format, stereo frame, 16bit
-  sink_handle->ringbuffer_data = malloc(SAMPLE_SIZE_BYTES * RINGBUFFER_SIZE_ELEMENTS);
-  sink_handle->ringbuffer = malloc(sizeof(PaUtilRingBuffer));
-  sink_handle->demand_handler = demand_handler;
-  if(PaUtil_InitializeRingBuffer(sink_handle->ringbuffer, SAMPLE_SIZE_BYTES, RINGBUFFER_SIZE_ELEMENTS, sink_handle->ringbuffer_data) == -1) {
-    MEMBRANE_WARN(env, "PaUtil_InitializeRingBuffer: error = %d (%s)", error, Pa_GetErrorText(error));
+  sink_handle->ringbuffer = membrane_ringbuffer_new(RINGBUFFER_SIZE_ELEMENTS, SAMPLE_SIZE_BYTES);
+  if(!sink_handle->ringbuffer) {
+    MEMBRANE_WARN(env, "Error initializing ringbuffer");
     enif_free(sink_handle);
-    return membrane_util_make_error_internal(env, "pautilinitializeringbuffer");
+    return membrane_util_make_error_internal(env, "ringbuffer_init");
   }
+  // if(PaUtil_InitializeRingBuffer(sink_handle->ringbuffer, SAMPLE_SIZE_BYTES, RINGBUFFER_SIZE_ELEMENTS, sink_handle->ringbuffer_data) == -1) {
+  //   MEMBRANE_WARN(env, "PaUtil_InitializeRingBuffer: error = %d (%s)", error, Pa_GetErrorText(error));
+  //   enif_free(sink_handle);
+  //   return membrane_util_make_error_internal(env, "pautilinitializeringbuffer");
+  // }
 
 
   // Initialize PortAudio
