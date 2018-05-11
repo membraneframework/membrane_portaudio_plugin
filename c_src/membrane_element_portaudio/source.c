@@ -53,9 +53,9 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
   UNUSED(_output_buffer);
   UNUSED(_time_info);
   UNUSED(_flags);
-  ErlNifEnv    *msg_env;
-  ERL_NIF_TERM  packet_term;
-  size_t        packet_size_in_bytes = frames * 2 * 2; // we use 16 bit, 2 channels
+  ErlNifEnv *msg_env;
+  ERL_NIF_TERM packet_term;
+  size_t packet_size_in_bytes = frames * 2 * 2; // we use 16 bit, 2 channels
   SourceHandle *source_handle = (SourceHandle *) user_data;
 
 
@@ -120,9 +120,9 @@ static ERL_NIF_TERM export_stop(ErlNifEnv* env, int _argc, const ERL_NIF_TERM ar
 
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
-  // char            endpoint_id[64];
-  SourceHandle   *source_handle;
-  PaError         error;
+  // char endpoint_id[64];
+  SourceHandle *source_handle;
+  PaError error;
 
 
   // Get device ID arg
@@ -152,12 +152,12 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 
   // Open stream for the default device
   error = Pa_OpenDefaultStream(&(source_handle->stream),
-                              2,              // 2 input channels
-                              0,              // no output
-                              paInt16,        // 16 bit integer format FIXME hardcoded
-                              48000,          // sample rate FIXME hardcoded
-                              buffer_size,    // frames per buffer
-                              callback,       // callback function for processing
+                              2, // 2 input channels
+                              0, // no output
+                              paInt16, // 16 bit integer format FIXME hardcoded
+                              48000, // sample rate FIXME hardcoded
+                              buffer_size, // frames per buffer
+                              callback, // callback function for processing
                               source_handle); // user data passed to the callback
 
   if(error != paNoError) {

@@ -7,7 +7,7 @@
 
 #include "sink.h"
 
-#define SAMPLE_SIZE_BYTES        4
+#define SAMPLE_SIZE_BYTES 4
 #define RINGBUFFER_SIZE_ELEMENTS 4096
 
 #define UNUSED(x) (void)(x)
@@ -119,9 +119,9 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int _argc, const ERL_NIF_TERM a
 
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
-  // char              endpoint_id[64];
-  SinkHandle       *sink_handle;
-  PaError           error;
+  // char endpoint_id[64];
+  SinkHandle *sink_handle;
+  PaError error;
 
 
   // Get device ID arg
@@ -147,11 +147,6 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
     enif_free(sink_handle);
     return membrane_util_make_error_internal(env, "ringbuffer_init");
   }
-  // if(PaUtil_InitializeRingBuffer(sink_handle->ringbuffer, SAMPLE_SIZE_BYTES, RINGBUFFER_SIZE_ELEMENTS, sink_handle->ringbuffer_data) == -1) {
-  //   MEMBRANE_WARN(env, "PaUtil_InitializeRingBuffer: error = %d (%s)", error, Pa_GetErrorText(error));
-  //   enif_free(sink_handle);
-  //   return membrane_util_make_error_internal(env, "pautilinitializeringbuffer");
-  // }
 
 
   // Initialize PortAudio
@@ -159,24 +154,24 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
-    return membrane_util_make_error_internal(env, "painitialize");
+    return membrane_util_make_error_internal(env, "pa_initialize");
   }
 
 
   // Open stream for the default device
   error = Pa_OpenDefaultStream(&(sink_handle->stream),
-                              0,              // no input
-                              2,              // 2 output channels
-                              paInt16,        // 16 bit integer format FIXME hardcoded
-                              48000,          // sample rate FIXME hardcoded
-                              buffer_size,    // frames per buffer
-                              callback,       // callback function for processing
-                              sink_handle);   // user data passed to the callback
+                              0, // no input
+                              2, // 2 output channels
+                              paInt16, // 16 bit integer format FIXME hardcoded
+                              48000, // sample rate FIXME hardcoded
+                              buffer_size, // frames per buffer
+                              callback, // callback function for processing
+                              sink_handle); // user data passed to the callback
 
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
-    return membrane_util_make_error_internal(env, "paopendefaultstream");
+    return membrane_util_make_error_internal(env, "pa_open_default_stream");
   }
 
 
@@ -185,7 +180,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
     enif_free(sink_handle);
-    return membrane_util_make_error_internal(env, "pastartstream");
+    return membrane_util_make_error_internal(env, "pa_start_stream");
   }
 
 

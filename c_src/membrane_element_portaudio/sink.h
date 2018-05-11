@@ -24,9 +24,9 @@ typedef struct _SinkHandle SinkHandle;
 
 struct _SinkHandle
 {
-  PaStream         *stream;           // Port Audio stream
+  PaStream *stream; // Port Audio stream
   MembraneRingBuffer *ringbuffer;
-  ErlNifPid        demand_handler;  // Where to send demands
+  ErlNifPid demand_handler; // Where to send demands
 };
 
 #endif

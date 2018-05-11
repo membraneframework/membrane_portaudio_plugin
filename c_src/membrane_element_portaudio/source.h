@@ -12,13 +12,13 @@
 #include <erl_nif.h>
 #include <portaudio.h>
 #include <membrane/membrane.h>
-#define MEMBRANE_LOG_TAG  "Membrane.Element.PortAudio.Source.Native"
+#define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Source.Native"
 #include <membrane/log.h>
 
 typedef struct _SourceHandle SourceHandle;
 
 struct _SourceHandle
 {
-  PaStream   *stream;          // Port Audio stream
-  ErlNifPid  destination;     // Where capture thread will send messages
+  PaStream *stream; // Port Audio stream
+  ErlNifPid destination; // Where capture thread will send messages
 };
