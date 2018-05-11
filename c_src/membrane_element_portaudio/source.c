@@ -7,6 +7,7 @@
 
 #include "source.h"
 
+#define UNUSED(x) (void)(x)
 
 ErlNifResourceType *RES_SOURCE_HANDLE_TYPE;
 
@@ -36,7 +37,9 @@ static void res_source_handle_destructor(ErlNifEnv *env, void *value) {
 }
 
 
-static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
+static int load(ErlNifEnv *env, void **_priv_data, ERL_NIF_TERM _load_info) {
+  UNUSED(_priv_data);
+  UNUSED(_load_info);
   int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
   RES_SOURCE_HANDLE_TYPE =
     enif_open_resource_type(env, NULL, "SourceHandle", res_source_handle_destructor, flags, NULL);
@@ -46,9 +49,11 @@ static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
 
 
 
-static int callback(const void *input_buffer, void *output_buffer, unsigned long frames, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void *user_data) {
+static int callback(const void *input_buffer, void *_output_buffer, unsigned long frames, const PaStreamCallbackTimeInfo* _time_info, PaStreamCallbackFlags _flags, void *user_data) {
+  UNUSED(_output_buffer);
+  UNUSED(_time_info);
+  UNUSED(_flags);
   ErlNifEnv    *msg_env;
-  ErlNifPid     destination;
   ERL_NIF_TERM  packet_term;
   size_t        packet_size_in_bytes = frames * 2 * 2; // we use 16 bit, 2 channels
   SourceHandle *source_handle = (SourceHandle *) user_data;
@@ -77,8 +82,8 @@ static int callback(const void *input_buffer, void *output_buffer, unsigned long
 }
 
 
-static ERL_NIF_TERM export_start(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
+static ERL_NIF_TERM export_start(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+  UNUSED(_argc);
   SourceHandle *source_handle;
   PaError error;
 
@@ -102,8 +107,8 @@ static ERL_NIF_TERM export_start(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
 }
 
 
-static ERL_NIF_TERM export_stop(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
+static ERL_NIF_TERM export_stop(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+  UNUSED(_argc);
   SourceHandle *source_handle;
   PaError error;
 
@@ -127,10 +132,10 @@ static ERL_NIF_TERM export_stop(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 }
 
 
-static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
+static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+  UNUSED(_argc);
   int             buffer_size;
-  char            endpoint_id[64];
+  // char            endpoint_id[64];
   SourceHandle   *source_handle;
   PaError         error;
 
@@ -198,8 +203,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
 }
 
 
-static ErlNifFunc nif_funcs[] =
-{
+static ErlNifFunc nif_funcs[] = {
   {"create", 3, export_create, 0},
   {"start", 1, export_start, 0},
   {"stop", 1, export_stop, 0}

@@ -10,6 +10,8 @@
 #define SAMPLE_SIZE_BYTES        4
 #define RINGBUFFER_SIZE_ELEMENTS 4096
 
+#define UNUSED(x) (void)(x)
+
 ErlNifResourceType *RES_SOURCE_HANDLE_TYPE;
 
 
@@ -42,7 +44,9 @@ static void res_sink_handle_destructor(ErlNifEnv *env, void *value) {
 }
 
 
-static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
+static int load(ErlNifEnv *env, void **_priv_data, ERL_NIF_TERM _load_info) {
+  UNUSED(_priv_data);
+  UNUSED(_load_info);
   int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
   RES_SOURCE_HANDLE_TYPE =
     enif_open_resource_type(env, NULL, "SinkHandle", res_sink_handle_destructor, flags, NULL);
@@ -67,7 +71,10 @@ static void send_demand(unsigned int size, ErlNifPid* demand_handler) {
 }
 
 
-static int callback(const void *input_buffer, void *output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void *user_data) {
+static int callback(const void *_input_buffer, void *output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* _time_info, PaStreamCallbackFlags _flags, void *user_data) {
+  UNUSED(_input_buffer);
+  UNUSED(_time_info);
+  UNUSED(_flags);
   SinkHandle *sink_handle = (SinkHandle *) user_data;
 
   size_t elements_available = membrane_ringbuffer_get_read_available(sink_handle->ringbuffer);
@@ -83,10 +90,9 @@ static int callback(const void *input_buffer, void *output_buffer, unsigned long
 }
 
 
-static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
+static ERL_NIF_TERM export_write(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+  UNUSED(_argc);
   SinkHandle *sink_handle;
-  PaError error;
   ErlNifBinary payload_binary;
 
   // Get sink_handle arg
@@ -122,11 +128,11 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int argc, const ERL_NIF_TERM ar
 }
 
 
-static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
+static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+  UNUSED(_argc);
   int               buffer_size;
   ErlNifPid*        demand_handler = (ErlNifPid*) enif_alloc(sizeof(ErlNifPid));
-  char              endpoint_id[64];
+  // char              endpoint_id[64];
   SinkHandle       *sink_handle;
   PaError           error;
 
@@ -214,8 +220,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
 }
 
 
-static ErlNifFunc nif_funcs[] =
-{
+static ErlNifFunc nif_funcs[] = {
   {"create", 3, export_create, 0},
   {"write", 2, export_write, 0}
 };
