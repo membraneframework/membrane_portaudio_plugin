@@ -12,7 +12,7 @@
 
 #define UNUSED(x) (void)(x)
 
-ErlNifResourceType *RES_SOURCE_HANDLE_TYPE;
+ErlNifResourceType *RES_SINK_HANDLE_TYPE;
 
 
 static void res_sink_handle_destructor(ErlNifEnv *env, void *value) {
@@ -48,13 +48,13 @@ static int load(ErlNifEnv *env, void **_priv_data, ERL_NIF_TERM _load_info) {
   UNUSED(_priv_data);
   UNUSED(_load_info);
   int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
-  RES_SOURCE_HANDLE_TYPE =
+  RES_SINK_HANDLE_TYPE =
     enif_open_resource_type(env, NULL, "SinkHandle", res_sink_handle_destructor, flags, NULL);
 
   return 0;
 }
 
-static void send_demand(unsigned int size, ErlNifPid* demand_handler) {
+static void send_demand(unsigned int size, ErlNifPid demand_handler) {
   ErlNifEnv* msg_env = enif_alloc_env();
 
   ERL_NIF_TERM tuple[2] = {
@@ -63,7 +63,7 @@ static void send_demand(unsigned int size, ErlNifPid* demand_handler) {
   };
   ERL_NIF_TERM msg = enif_make_tuple_from_array(msg_env, tuple, 2);
 
-  if(!enif_send(NULL, demand_handler, msg_env, msg)) {
+  if(!enif_send(NULL, &demand_handler, msg_env, msg)) {
     MEMBRANE_THREADED_WARN("PortAudio sink: failed to send demand");
   }
 
@@ -92,20 +92,9 @@ static int callback(const void *_input_buffer, void *output_buffer, unsigned lon
 
 static ERL_NIF_TERM export_write(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
-  SinkHandle *sink_handle;
-  ErlNifBinary payload_binary;
 
-  // Get sink_handle arg
-  if(!enif_get_resource(env, argv[0], RES_SOURCE_HANDLE_TYPE, (void **) &sink_handle)) {
-    return membrane_util_make_error_args(env, "sink_handle", "Passed sink_handle is not valid resource");
-  }
-
-
-  // Get payload arg
-  if(!enif_inspect_binary(env, argv[1], &payload_binary)) {
-    return membrane_util_make_error_args(env, "payload", "Passed payload is not valid binary");
-  }
-
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, sink_handle, SinkHandle, RES_SINK_HANDLE_TYPE);
+  MEMBRANE_UTIL_PARSE_BINARY_ARG(1, payload_binary);
 
   // Write samples to the ringbuffer
   //
@@ -130,8 +119,6 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int _argc, const ERL_NIF_TERM a
 
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
-  int               buffer_size;
-  ErlNifPid*        demand_handler = (ErlNifPid*) enif_alloc(sizeof(ErlNifPid));
   // char              endpoint_id[64];
   SinkHandle       *sink_handle;
   PaError           error;
@@ -143,17 +130,11 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
   //   return membrane_util_make_error_args(env, "endpoint_id", "Passed device ID is not valid");
   // }
 
-
-  // Get buffer size arg
-  if(!enif_get_int(env, argv[1], &buffer_size)) {
-    return membrane_util_make_error_args(env, "buffer_duration", "Passed buffer size is out of integer range or is not an integer");
-  }
-  if(!enif_get_local_pid(env, argv[2], demand_handler)) {
-    return membrane_util_make_error_args(env, "demand_handler", "Passed demand_handler is not a valid pid");
-  }
+  MEMBRANE_UTIL_PARSE_INT_ARG(1, buffer_size);
+  MEMBRANE_UTIL_PARSE_PID_ARG(2, demand_handler);
 
   // Initialize handle
-  sink_handle = (SinkHandle *) enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SinkHandle));
+  sink_handle = (SinkHandle *) enif_alloc_resource(RES_SINK_HANDLE_TYPE, sizeof(SinkHandle));
   MEMBRANE_DEBUG(env, "Creating SinkHandle %p", sink_handle);
 
   sink_handle->demand_handler = demand_handler;

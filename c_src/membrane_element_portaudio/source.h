@@ -20,5 +20,5 @@ typedef struct _SourceHandle SourceHandle;
 struct _SourceHandle
 {
   PaStream   *stream;          // Port Audio stream
-  ErlNifPid  *destination;     // Where capture thread will send messages
+  ErlNifPid  destination;     // Where capture thread will send messages
 };

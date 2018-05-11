@@ -72,7 +72,7 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
   ERL_NIF_TERM msg = enif_make_tuple_from_array(msg_env, tuple, 2);
 
 
-  if(!enif_send(NULL, source_handle->destination, msg_env, msg)) {
+  if(!enif_send(NULL, &source_handle->destination, msg_env, msg)) {
     MEMBRANE_THREADED_WARN("Capture: packet send failed");
   }
 
@@ -84,23 +84,16 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
 
 static ERL_NIF_TERM export_start(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
-  SourceHandle *source_handle;
   PaError error;
 
-
-  // Get source_handle arg
-  if(!enif_get_resource(env, argv[0], RES_SOURCE_HANDLE_TYPE, (void **) &source_handle)) {
-    return membrane_util_make_error_args(env, "source_handle", "Passed source_handle is not valid resource");
-  }
-
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, source_handle, SourceHandle, RES_SOURCE_HANDLE_TYPE);
 
   // Start the stream
   error = Pa_StartStream(source_handle->stream);
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    return membrane_util_make_error_internal(env, "pastartstream");
+    return membrane_util_make_error_internal(env, "pa+_start_stream");
   }
-
 
   // Return
   return membrane_util_make_ok(env);
@@ -109,23 +102,16 @@ static ERL_NIF_TERM export_start(ErlNifEnv* env, int _argc, const ERL_NIF_TERM a
 
 static ERL_NIF_TERM export_stop(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
-  SourceHandle *source_handle;
   PaError error;
 
-
-  // Get source_handle arg
-  if(!enif_get_resource(env, argv[0], RES_SOURCE_HANDLE_TYPE, (void **) &source_handle)) {
-    return membrane_util_make_error_args(env, "source_handle", "Passed source_handle is not valid resource");
-  }
-
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, source_handle, SourceHandle, RES_SOURCE_HANDLE_TYPE);
 
   // Stop the stream
   error = Pa_StopStream(source_handle->stream);
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    return membrane_util_make_error_internal(env, "paclosestream");
+    return membrane_util_make_error_internal(env, "pa_close_stream");
   }
-
 
   // Return
   return membrane_util_make_ok(env);
@@ -134,7 +120,6 @@ static ERL_NIF_TERM export_stop(ErlNifEnv* env, int _argc, const ERL_NIF_TERM ar
 
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
-  int             buffer_size;
   // char            endpoint_id[64];
   SourceHandle   *source_handle;
   PaError         error;
@@ -146,20 +131,8 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
   //   return membrane_util_make_error_args(env, "endpoint_id", "Passed device ID is not valid");
   // }
 
-
-  // Get destination arg
-  ErlNifPid* destination = (ErlNifPid*) enif_alloc(sizeof(ErlNifPid));
-  if(!enif_get_local_pid(env, argv[1], destination)) {
-    return membrane_util_make_error_args(env, "destination", "Passed destination is not valid pid");
-  }
-
-
-  // Get buffer size arg
-  if(!enif_get_int(env, argv[2], &buffer_size)) {
-    return membrane_util_make_error_args(env, "buffer_duration", "Passed buffer size is out of integer range or is not an integer");
-  }
-
-
+  MEMBRANE_UTIL_PARSE_PID_ARG(1, destination);
+  MEMBRANE_UTIL_PARSE_INT_ARG(2, buffer_size);
 
 
   // Initialize handle
@@ -173,7 +146,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
   error = Pa_Initialize();
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
-    return membrane_util_make_error_internal(env, "painitialize");
+    return membrane_util_make_error_internal(env, "pa_initialize");
   }
 
 
@@ -189,7 +162,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    return membrane_util_make_error_internal(env, "paopendefaultstream");
+    return membrane_util_make_error_internal(env, "pa_open_default_stream");
   }
 
 
