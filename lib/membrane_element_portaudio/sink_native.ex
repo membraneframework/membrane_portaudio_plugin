@@ -9,4 +9,7 @@ defmodule Membrane.Element.PortAudio.Sink.Native do
 
   @spec write(reference, binary) :: :ok | {:error, any}
   defnif write(handle, buffer)
+
+  @spec destroy(reference) :: :ok
+  defnif destroy(handle)
 end

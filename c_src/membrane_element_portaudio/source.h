@@ -21,6 +21,7 @@ typedef struct _SourceHandle SourceHandle;
 
 struct _SourceHandle
 {
+  char is_zombie;
   PaStream *stream;
   ErlNifPid destination; // Where capture thread will send messages
 };

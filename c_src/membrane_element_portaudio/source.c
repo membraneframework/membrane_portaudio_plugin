@@ -9,12 +9,12 @@
 
 #define UNUSED(x) (void)(x)
 
-ErlNifResourceType *RES_handle_TYPE;
+ErlNifResourceType *RES_HANDLE_TYPE;
 
 
 static void res_handle_destructor(ErlNifEnv *env, void *value) {
-  PaError error;
   SourceHandle *handle = (SourceHandle *) value;
+  if(handle->is_zombie) return;
 
   MEMBRANE_DEBUG(env, "Destroying SourceHandle %p", value);
 
@@ -26,12 +26,25 @@ static int load(ErlNifEnv *env, void **_priv_data, ERL_NIF_TERM _load_info) {
   UNUSED(_priv_data);
   UNUSED(_load_info);
   int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
-  RES_handle_TYPE =
+  RES_HANDLE_TYPE =
     enif_open_resource_type(env, NULL, "SourceHandle", res_handle_destructor, flags, NULL);
+
+  PaError pa_error = Pa_Initialize();
+  if(pa_error != paNoError) {
+    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
+    return -1;
+  }
 
   return 0;
 }
 
+static void unload(ErlNifEnv* env, void* _priv_data) {
+  UNUSED(_priv_data);
+  PaError pa_error = Pa_Terminate();
+  if(pa_error != paNoError) {
+    MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
+  }
+}
 
 
 static int callback(const void *input_buffer, void *_output_buffer, unsigned long frames, const PaStreamCallbackTimeInfo* _time_info, PaStreamCallbackFlags _flags, void *user_data) {
@@ -67,42 +80,6 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
 }
 
 
-static ERL_NIF_TERM export_start(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
-  UNUSED(_argc);
-  PaError error;
-
-  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_handle_TYPE);
-
-  // Start the stream
-  error = Pa_StartStream(handle->stream);
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    return membrane_util_make_error_internal(env, "pa+_start_stream");
-  }
-
-  // Return
-  return membrane_util_make_ok(env);
-}
-
-
-static ERL_NIF_TERM export_stop(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
-  UNUSED(_argc);
-  PaError error;
-
-  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_handle_TYPE);
-
-  // Stop the stream
-  error = Pa_StopStream(handle->stream);
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    return membrane_util_make_error_internal(env, "pa_close_stream");
-  }
-
-  // Return
-  return membrane_util_make_ok(env);
-}
-
-
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
 
@@ -113,7 +90,8 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 
   MEMBRANE_DEBUG(env, "initializing");
 
-  SourceHandle* handle = enif_alloc_resource(RES_handle_TYPE, sizeof(SourceHandle));
+  SourceHandle* handle = enif_alloc_resource(RES_HANDLE_TYPE, sizeof(SourceHandle));
+  handle->is_zombie = 0;
   handle->destination = destination;
   handle->stream = NULL;
 
@@ -144,9 +122,27 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 }
 
 
+static ERL_NIF_TERM export_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+  UNUSED(_argc);
+
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_HANDLE_TYPE);
+
+  if(!handle->is_zombie) {
+
+    destroy_pa(env, MEMBRANE_LOG_TAG, handle->stream);
+    handle->stream = NULL;
+
+    handle->is_zombie = 1;
+  }
+
+  return membrane_util_make_ok(env);
+}
+
+
 static ErlNifFunc nif_funcs[] = {
   {"create", 4, export_create, 0},
+  {"destroy", 1, export_destroy, 0}
 };
 
 
-ERL_NIF_INIT(Elixir.Membrane.Element.PortAudio.Source.Native.Nif, nif_funcs, load, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.Membrane.Element.PortAudio.Source.Native.Nif, nif_funcs, load, NULL, NULL, unload)

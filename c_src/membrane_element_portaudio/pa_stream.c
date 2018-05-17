@@ -9,12 +9,6 @@ char* init_pa(
 ) {
   PaError error;
 
-  error = Pa_Initialize();
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
-    return "pa_initialize";
-  }
-
   if(endpoint_id == paNoDevice)
     endpoint_id = direction ? Pa_GetDefaultOutputDevice() : Pa_GetDefaultInputDevice();
 
@@ -86,17 +80,13 @@ char* destroy_pa(ErlNifEnv* env, char* log_tag, PaStream* stream) {
     }
 
     pa_error = Pa_CloseStream(stream);
-    if(pa_error != paNoError) {
+    if(pa_error != paNoError && pa_error != paNotInitialized) {
       MEMBRANE_WARN(env, "Pa_CloseStream: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
       if(!error) error = "pa_close_stream";
     }
   }
 
-  pa_error = Pa_Terminate();
-  if(pa_error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
-    if(!error) error = "pa_terminate";
-  }
+
 
   return error;
 }

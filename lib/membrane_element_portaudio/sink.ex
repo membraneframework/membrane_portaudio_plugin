@@ -11,9 +11,6 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   @pa_no_device -1
 
-  # FIXME hardcoded
-  @frame_size 4
-
   # FIXME hardcoded caps
   def_known_sink_pads sink:
                         {:always, {:pull, demand_in: :bytes},
@@ -28,7 +25,7 @@ defmodule Membrane.Element.PortAudio.Sink do
               ringbuffer_size: [
                 type: :integer,
                 spec: pos_integer,
-                default: 256,
+                default: 4096,
                 description: "Size of the ringbuffer (in frames)"
               ],
               portaudio_buffer_size: [
@@ -52,7 +49,8 @@ defmodule Membrane.Element.PortAudio.Sink do
        ringbuffer_size: options.ringbuffer_size,
        pa_buffer_size: options.portaudio_buffer_size,
        latency: options.latency,
-       native: nil
+       native: nil,
+       playing: false
      }}
   end
 
@@ -65,6 +63,8 @@ defmodule Membrane.Element.PortAudio.Sink do
       latency: latency
     } = state
 
+    state = %{state | playing: true}
+
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
     with {:ok, native} <-
@@ -76,8 +76,8 @@ defmodule Membrane.Element.PortAudio.Sink do
   end
 
   @impl true
-  def handle_prepare(:playing, state) do
-    {:ok, %{state | native: nil}}
+  def handle_prepare(:playing, %{native: native} = state) do
+    {Native.destroy(native), %{state | native: nil, playing: false}}
   end
 
   @impl true
@@ -86,8 +86,13 @@ defmodule Membrane.Element.PortAudio.Sink do
   end
 
   @impl true
-  def handle_other({:ringbuffer_demand, size}, state) do
-    {{:ok, demand: {:sink, size * @frame_size}}, state}
+  def handle_other({:ringbuffer_demand, size}, %{playing: true} = state) do
+    {{:ok, demand: {:sink, size}}, state}
+  end
+
+  @impl true
+  def handle_other({:ringbuffer_demand, _size}, state) do
+    {:ok, state}
   end
 
   @impl true

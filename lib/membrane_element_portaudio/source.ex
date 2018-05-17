@@ -41,7 +41,8 @@ defmodule Membrane.Element.PortAudio.Source do
        endpoint_id: options.endpoint_id,
        pa_buffer_size: options.portaudio_buffer_size,
        latency: options.latency,
-       native: nil
+       native: nil,
+       playing: false
      }}
   end
 
@@ -52,6 +53,8 @@ defmodule Membrane.Element.PortAudio.Source do
       pa_buffer_size: pa_buffer_size,
       latency: latency
     } = state
+
+    state = %{state | playing: true}
 
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
@@ -65,8 +68,8 @@ defmodule Membrane.Element.PortAudio.Source do
   end
 
   @impl true
-  def handle_prepare(:playing, state) do
-    {:ok, %{state | native: nil}}
+  def handle_prepare(:playing, %{native: native} = state) do
+    {Native.destroy(native), %{state | native: nil, playing: false}}
   end
 
   @impl true
@@ -75,7 +78,12 @@ defmodule Membrane.Element.PortAudio.Source do
   end
 
   @impl true
-  def handle_other({:membrane_element_portaudio_source_packet, payload}, state) do
+  def handle_other({:membrane_element_portaudio_source_packet, payload}, %{playing: true} = state) do
     {{:ok, buffer: {:source, %Buffer{payload: payload}}}, state}
+  end
+
+  @impl true
+  def handle_other({:membrane_element_portaudio_source_packet, _payload}, state) do
+    {:ok, state}
   end
 end

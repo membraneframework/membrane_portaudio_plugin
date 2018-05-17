@@ -5,4 +5,7 @@ defmodule Membrane.Element.PortAudio.Source.Native do
 
   @spec create(pid, integer, pos_integer, :low | :high) :: {:ok, reference} | {:error, any}
   defnif create(destination, endpoint_id, pa_buffer_size, latency)
+
+  @spec destroy(reference) :: :ok
+  defnif destroy(handle)
 end
