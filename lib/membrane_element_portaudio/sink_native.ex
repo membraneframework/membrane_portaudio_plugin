@@ -9,7 +9,4 @@ defmodule Membrane.Element.PortAudio.Sink.Native do
 
   @spec write(reference, binary) :: :ok | {:error, any}
   defnif write(handle, buffer)
-
-  @spec get_default_endpoint_id() :: integer
-  defnif get_default_endpoint_id()
 end

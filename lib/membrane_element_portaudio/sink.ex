@@ -9,8 +9,12 @@ defmodule Membrane.Element.PortAudio.Sink do
   alias Membrane.Caps.Audio.Raw, as: Caps
   use Membrane.Mixins.Log
 
+  @pa_no_device -1
+
+  # FIXME hardcoded
   @frame_size 4
 
+  # FIXME hardcoded caps
   def_known_sink_pads sink:
                         {:always, {:pull, demand_in: :bytes},
                          {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
@@ -61,8 +65,7 @@ defmodule Membrane.Element.PortAudio.Sink do
       latency: latency
     } = state
 
-    endpoint_id =
-      if endpoint_id == :default, do: Native.get_default_endpoint_id(), else: endpoint_id
+    endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
     with {:ok, native} <-
            Native.create(self(), endpoint_id, ringbuffer_size, pa_buffer_size, latency) do

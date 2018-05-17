@@ -12,9 +12,11 @@
 #include <erl_nif.h>
 #include <portaudio.h>
 #include <membrane/membrane.h>
+#include <membrane_ringbuffer/ringbuffer.h>
 #define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Sink.Native"
 #include <membrane/log.h>
-#include <membrane_ringbuffer/ringbuffer.h>
+
+#include "pa_stream.h"
 
 typedef struct _SinkHandle SinkHandle;
 

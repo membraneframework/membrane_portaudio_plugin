@@ -8,37 +8,55 @@ defmodule Membrane.Element.PortAudio.Source do
   alias __MODULE__.Native
   alias Membrane.Caps.Audio.Raw, as: Caps
 
+  @pa_no_device -1
+
+  # FIXME hardcoded caps
   def_known_source_pads source:
                           {:always, :push,
                            {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
-  # FIXME: improve endpoint_id option
   def_options endpoint_id: [
-                type: :string,
-                spec: String.t() | nil,
-                default: nil,
-                description: "Portaudio sound card id"
+                type: :integer,
+                spec: integer | :default,
+                default: :default,
+                description: "PortAudio sound card id"
               ],
-              buffer_size: [
+              portaudio_buffer_size: [
                 type: :integer,
                 spec: pos_integer,
                 default: 256,
-                description: "Size of each incoming buffer (in frames)"
+                description: "Size of the portaudio buffer (in frames)"
+              ],
+              latency: [
+                type: :atom,
+                spec: :low | :high,
+                default: :high,
+                description: "Latency of the output device"
               ]
 
   @impl true
-  def handle_init(%__MODULE__{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
+  def handle_init(%__MODULE__{} = options) do
     {:ok,
      %{
-       endpoint_id: endpoint_id,
-       buffer_size: buffer_size,
+       endpoint_id: options.endpoint_id,
+       pa_buffer_size: options.portaudio_buffer_size,
+       latency: options.latency,
        native: nil
      }}
   end
 
   @impl true
-  def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    with {:ok, native} <- Native.create(endpoint_id, self(), buffer_size) do
+  def handle_play(state) do
+    %{
+      endpoint_id: endpoint_id,
+      pa_buffer_size: pa_buffer_size,
+      latency: latency
+    } = state
+
+    endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
+
+    with {:ok, native} <- Native.create(self(), endpoint_id, pa_buffer_size, latency) do
+      # FIXME hardcoded caps
       {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}},
        %{state | native: native}}
     else
@@ -52,13 +70,8 @@ defmodule Membrane.Element.PortAudio.Source do
   end
 
   @impl true
-  def handle_play(%{native: native} = state) do
-    {Native.start(native), state}
-  end
-
-  @impl true
-  def handle_stop(%{native: native} = state) do
-    {Native.stop(native), state}
+  def handle_prepare(_, state) do
+    {:ok, state}
   end
 
   @impl true

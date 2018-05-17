@@ -15,10 +15,12 @@
 #define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Source.Native"
 #include <membrane/log.h>
 
+#include "pa_stream.h"
+
 typedef struct _SourceHandle SourceHandle;
 
 struct _SourceHandle
 {
-  PaStream *stream; // Port Audio stream
+  PaStream *stream;
   ErlNifPid destination; // Where capture thread will send messages
 };

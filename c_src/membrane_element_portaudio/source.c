@@ -9,31 +9,16 @@
 
 #define UNUSED(x) (void)(x)
 
-ErlNifResourceType *RES_SOURCE_HANDLE_TYPE;
+ErlNifResourceType *RES_handle_TYPE;
 
 
-static void res_source_handle_destructor(ErlNifEnv *env, void *value) {
+static void res_handle_destructor(ErlNifEnv *env, void *value) {
   PaError error;
-  SourceHandle *source_handle = (SourceHandle *) value;
+  SourceHandle *handle = (SourceHandle *) value;
 
   MEMBRANE_DEBUG(env, "Destroying SourceHandle %p", value);
 
-  if(Pa_IsStreamStopped(source_handle->stream) == 0) {
-    error = Pa_StopStream(source_handle->stream);
-    if(error != paNoError) {
-      MEMBRANE_WARN(env, "Pa_StopStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    }
-  }
-
-  error = Pa_CloseStream(source_handle->stream);
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_CloseStream: error = %d (%s)", error, Pa_GetErrorText(error));
-  }
-
-  error = Pa_Terminate();
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", error, Pa_GetErrorText(error));
-  }
+  destroy_pa(env, MEMBRANE_LOG_TAG, handle->stream);
 }
 
 
@@ -41,8 +26,8 @@ static int load(ErlNifEnv *env, void **_priv_data, ERL_NIF_TERM _load_info) {
   UNUSED(_priv_data);
   UNUSED(_load_info);
   int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
-  RES_SOURCE_HANDLE_TYPE =
-    enif_open_resource_type(env, NULL, "SourceHandle", res_source_handle_destructor, flags, NULL);
+  RES_handle_TYPE =
+    enif_open_resource_type(env, NULL, "SourceHandle", res_handle_destructor, flags, NULL);
 
   return 0;
 }
@@ -56,7 +41,7 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
   ErlNifEnv *msg_env;
   ERL_NIF_TERM packet_term;
   size_t packet_size_in_bytes = frames * 2 * 2; // we use 16 bit, 2 channels
-  SourceHandle *source_handle = (SourceHandle *) user_data;
+  SourceHandle *handle = (SourceHandle *) user_data;
 
 
   // Send packet upstream
@@ -72,7 +57,7 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
   ERL_NIF_TERM msg = enif_make_tuple_from_array(msg_env, tuple, 2);
 
 
-  if(!enif_send(NULL, &source_handle->destination, msg_env, msg)) {
+  if(!enif_send(NULL, &handle->destination, msg_env, msg)) {
     MEMBRANE_THREADED_WARN("Capture: packet send failed");
   }
 
@@ -86,10 +71,10 @@ static ERL_NIF_TERM export_start(ErlNifEnv* env, int _argc, const ERL_NIF_TERM a
   UNUSED(_argc);
   PaError error;
 
-  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, source_handle, SourceHandle, RES_SOURCE_HANDLE_TYPE);
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_handle_TYPE);
 
   // Start the stream
-  error = Pa_StartStream(source_handle->stream);
+  error = Pa_StartStream(handle->stream);
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "pa+_start_stream");
@@ -104,10 +89,10 @@ static ERL_NIF_TERM export_stop(ErlNifEnv* env, int _argc, const ERL_NIF_TERM ar
   UNUSED(_argc);
   PaError error;
 
-  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, source_handle, SourceHandle, RES_SOURCE_HANDLE_TYPE);
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_handle_TYPE);
 
   // Stop the stream
-  error = Pa_StopStream(source_handle->stream);
+  error = Pa_StopStream(handle->stream);
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
     return membrane_util_make_error_internal(env, "pa_close_stream");
@@ -120,66 +105,47 @@ static ERL_NIF_TERM export_stop(ErlNifEnv* env, int _argc, const ERL_NIF_TERM ar
 
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
-  // char endpoint_id[64];
-  SourceHandle *source_handle;
-  PaError error;
 
+  MEMBRANE_UTIL_PARSE_PID_ARG(0, destination);
+  MEMBRANE_UTIL_PARSE_INT_ARG(1, endpoint_id);
+  MEMBRANE_UTIL_PARSE_INT_ARG(2, pa_buffer_size);
+  MEMBRANE_UTIL_PARSE_ATOM_ARG(3, latency_str, 255);
 
-  // Get device ID arg
-  // FIXME it is not going to be an atom
-  // if(!enif_get_atom(env, argv[0], (char *) endpoint_id, ENDPOINT_ID_LEN, ERL_NIF_LATIN1)) {
-  //   return membrane_util_make_error_args(env, "endpoint_id", "Passed device ID is not valid");
-  // }
+  MEMBRANE_DEBUG(env, "initializing");
 
-  MEMBRANE_UTIL_PARSE_PID_ARG(1, destination);
-  MEMBRANE_UTIL_PARSE_INT_ARG(2, buffer_size);
+  SourceHandle* handle = enif_alloc_resource(RES_handle_TYPE, sizeof(SourceHandle));
+  handle->destination = destination;
+  handle->stream = NULL;
 
+  char* error = init_pa(
+    env,
+    MEMBRANE_LOG_TAG,
+    0, //direction
+    &(handle->stream),
+    handle,
+    paInt16, //sample format #FIXME hardcoded0
+    48000, //sample rate #FIXME hardcoded
+    2, //channels #FIXME hardcoded
+    latency_str,
+    pa_buffer_size,
+    endpoint_id,
+    callback
+  );
 
-  // Initialize handle
-  source_handle = (SourceHandle *) enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SourceHandle));
-  MEMBRANE_DEBUG(env, "Creating SourceHandle %p", source_handle);
-
-  source_handle->destination = destination;
-
-
-  // Initialize PortAudio
-  error = Pa_Initialize();
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
-    return membrane_util_make_error_internal(env, "pa_initialize");
+  if(error) {
+    enif_release_resource(handle);
+    return membrane_util_make_error_internal(env, error);
   }
 
+  ERL_NIF_TERM handle_term = enif_make_resource(env, handle);
+  enif_release_resource(handle);
 
-  // Open stream for the default device
-  error = Pa_OpenDefaultStream(&(source_handle->stream),
-                              2, // 2 input channels
-                              0, // no output
-                              paInt16, // 16 bit integer format FIXME hardcoded
-                              48000, // sample rate FIXME hardcoded
-                              buffer_size, // frames per buffer
-                              callback, // callback function for processing
-                              source_handle); // user data passed to the callback
-
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_OpenDefaultStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    return membrane_util_make_error_internal(env, "pa_open_default_stream");
-  }
-
-
-  // Store handle as an erlang resource
-  ERL_NIF_TERM source_handle_term = enif_make_resource(env, source_handle);
-  enif_release_resource(source_handle);
-
-
-  // Return
-  return membrane_util_make_ok_tuple(env, source_handle_term);
+  return membrane_util_make_ok_tuple(env, handle_term);
 }
 
 
 static ErlNifFunc nif_funcs[] = {
-  {"create", 3, export_create, 0},
-  {"start", 1, export_start, 0},
-  {"stop", 1, export_stop, 0}
+  {"create", 4, export_create, 0},
 };
 
 
