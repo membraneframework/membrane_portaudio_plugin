@@ -18,9 +18,9 @@ defmodule Membrane.Element.PortAudio.Sink.Native do
 
   On sink initialization error, returns `{:error, {:create, reason}}`.
   """
-  @spec create(String.t() | nil, non_neg_integer, pid) ::
-          {:ok, any} | {:error, {:args, atom, String.t()}} | {:error, {:create, atom}}
-  defnif create(endpoint_id, buffer_size, demand_handler)
+  @spec create(integer, non_neg_integer, pid, :low | :high) ::
+          {:ok, any} | {:error, any}
+  defnif create(endpoint_id, buffer_size, demand_handler, latency)
 
   @doc """
   Writes data to the PortAudio sink.
@@ -39,4 +39,10 @@ defmodule Membrane.Element.PortAudio.Sink.Native do
   @spec write(any, %Membrane.Buffer{}) ::
           :ok | {:error, {:args, atom, String.t()}} | {:error, {:internal, atom}}
   defnif write(handle, buffer)
+
+  @doc """
+  Returns PortAudio default output device id
+  """
+  @spec get_default_endpoint_id() :: integer
+  defnif get_default_endpoint_id()
 end

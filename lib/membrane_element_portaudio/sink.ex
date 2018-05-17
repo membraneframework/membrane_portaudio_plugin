@@ -15,33 +15,42 @@ defmodule Membrane.Element.PortAudio.Sink do
                         {:always, {:pull, demand_in: :bytes},
                          {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
-  # FIXME: improve endpoint_id option
   def_options endpoint_id: [
-                type: :string,
-                spec: String.t() | nil,
-                default: nil,
-                description: "Portaudio sound card id"
+                type: :integer,
+                spec: integer | :default,
+                default: :default,
+                description: "PortAudio sound card id"
               ],
               buffer_size: [
                 type: :integer,
                 spec: pos_integer,
                 default: 256,
                 description: "Size of the ringbuffer (in frames)"
+              ],
+              latency: [
+                type: :atom,
+                spec: :low | :high,
+                default: :high,
+                description: "Latency of the output device"
               ]
 
   @impl true
-  def handle_init(%__MODULE__{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
+  def handle_init(%__MODULE__{endpoint_id: endpoint_id, buffer_size: buffer_size, latency: latency}) do
     {:ok,
      %{
        endpoint_id: endpoint_id,
        buffer_size: buffer_size,
+       latency: latency,
        native: nil
      }}
   end
 
   @impl true
-  def handle_play(%{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    with {:ok, native} <- Native.create(endpoint_id, buffer_size, self()) do
+  def handle_play(%{endpoint_id: endpoint_id, buffer_size: buffer_size, latency: latency} = state) do
+    endpoint_id =
+      if endpoint_id == :default, do: Native.get_default_endpoint_id(), else: endpoint_id
+
+    with {:ok, native} <- Native.create(endpoint_id, buffer_size, self(), latency) do
       {:ok, %{state | native: native}}
     else
       {:error, reason} -> {{:error, reason}, state}

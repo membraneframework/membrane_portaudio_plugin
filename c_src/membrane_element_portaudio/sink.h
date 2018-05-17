@@ -5,8 +5,7 @@
  */
 
 
-#ifndef __SINK_H__
-#define __SINK_H__
+#pragma once
 
 #include <stdio.h>
 #include <string.h>
@@ -17,16 +16,11 @@
 #include <membrane/log.h>
 #include <membrane_ringbuffer/ringbuffer.h>
 
-// #include "pa_ringbuffer.h"
-
-
 typedef struct _SinkHandle SinkHandle;
 
 struct _SinkHandle
 {
-  PaStream *stream; // Port Audio stream
-  MembraneRingBuffer *ringbuffer;
+  PaStream* stream;
+  MembraneRingBuffer* ringbuffer;
   ErlNifPid demand_handler; // Where to send demands
 };
-
-#endif
