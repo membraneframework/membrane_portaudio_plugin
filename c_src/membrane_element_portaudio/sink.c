@@ -173,10 +173,11 @@ static char* init_pa_stream(
 static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
 
-  MEMBRANE_UTIL_PARSE_INT_ARG(0, endpoint_id);
-  MEMBRANE_UTIL_PARSE_INT_ARG(1, pa_buffer_size);
-  MEMBRANE_UTIL_PARSE_PID_ARG(2, demand_handler);
-  MEMBRANE_UTIL_PARSE_ATOM_ARG(3, latency_str, 255);
+  MEMBRANE_UTIL_PARSE_PID_ARG(0, demand_handler);
+  MEMBRANE_UTIL_PARSE_INT_ARG(1, endpoint_id);
+  MEMBRANE_UTIL_PARSE_INT_ARG(2, ringbuffer_size);
+  MEMBRANE_UTIL_PARSE_INT_ARG(3, pa_buffer_size);
+  MEMBRANE_UTIL_PARSE_ATOM_ARG(4, latency_str, 255);
 
 
   MembraneRingBuffer* ringbuffer = membrane_ringbuffer_new(4096, FRAME_SIZE);
@@ -224,7 +225,7 @@ static ERL_NIF_TERM export_get_default_endpoint_id(ErlNifEnv* env, int _argc, co
 
 
 static ErlNifFunc nif_funcs[] = {
-  {"create", 4, export_create, 0},
+  {"create", 5, export_create, 0},
   {"write", 2, export_write, 0},
   {"get_default_endpoint_id", 0, export_get_default_endpoint_id, 0}
 };

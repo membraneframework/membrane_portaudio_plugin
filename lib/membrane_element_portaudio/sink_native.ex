@@ -1,48 +1,15 @@
 defmodule Membrane.Element.PortAudio.Sink.Native do
-  @moduledoc """
-  This module is an interface to native PortAudio sink.
-  """
+  @moduledoc false
 
   use Bundlex.Loader, nif: :sink
 
-  @doc """
-  Creates PortAudio sink.
+  @spec create(pid, integer, pos_integer, pos_integer, :low | :high) :: {:ok, any} | {:error, any}
+  defnif create(demand_handler, endpoint_id, ringbuffer_size, pa_buffer_size, latency)
 
-  Expects X arguments:
-
-  - ... TODO
-
-  On success, returns `{:ok, resource}`.
-
-  On bad arguments passed, returns `{:error, {:args, field, description}}`.
-
-  On sink initialization error, returns `{:error, {:create, reason}}`.
-  """
-  @spec create(integer, non_neg_integer, pid, :low | :high) ::
-          {:ok, any} | {:error, any}
-  defnif create(endpoint_id, buffer_size, demand_handler, latency)
-
-  @doc """
-  Writes data to the PortAudio sink.
-
-  Expects 2 arguments:
-
-  - handle to the sink
-  - buffer
-
-  On success, returns `:ok`.
-
-  On bad arguments passed, returns `{:error, {:args, field, description}}`.
-
-  On internal error, returns `{:error, {:write, reason}}`.
-  """
   @spec write(any, %Membrane.Buffer{}) ::
           :ok | {:error, {:args, atom, String.t()}} | {:error, {:internal, atom}}
   defnif write(handle, buffer)
 
-  @doc """
-  Returns PortAudio default output device id
-  """
   @spec get_default_endpoint_id() :: integer
   defnif get_default_endpoint_id()
 end
