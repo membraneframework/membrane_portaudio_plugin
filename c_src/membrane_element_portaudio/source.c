@@ -6,44 +6,18 @@
 
 
 #include "source.h"
+#define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Source.Native"
+#include <membrane/log.h>
 
 #define UNUSED(x) (void)(x)
 
-ErlNifResourceType *RES_HANDLE_TYPE;
-
-
-static void res_handle_destructor(ErlNifEnv *env, void *value) {
+void res_source_handle_destructor(ErlNifEnv *env, void *value) {
   SourceHandle *handle = (SourceHandle *) value;
   if(handle->is_zombie) return;
 
   MEMBRANE_DEBUG(env, "Destroying SourceHandle %p", value);
 
   destroy_pa(env, MEMBRANE_LOG_TAG, handle->stream);
-}
-
-
-static int load(ErlNifEnv *env, void **_priv_data, ERL_NIF_TERM _load_info) {
-  UNUSED(_priv_data);
-  UNUSED(_load_info);
-  int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
-  RES_HANDLE_TYPE =
-    enif_open_resource_type(env, NULL, "SourceHandle", res_handle_destructor, flags, NULL);
-
-  PaError pa_error = Pa_Initialize();
-  if(pa_error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
-    return -1;
-  }
-
-  return 0;
-}
-
-static void unload(ErlNifEnv* env, void* _priv_data) {
-  UNUSED(_priv_data);
-  PaError pa_error = Pa_Terminate();
-  if(pa_error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
-  }
 }
 
 
@@ -80,7 +54,7 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
 }
 
 
-static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM export_source_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
 
   MEMBRANE_UTIL_PARSE_PID_ARG(0, destination);
@@ -90,7 +64,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 
   MEMBRANE_DEBUG(env, "initializing");
 
-  SourceHandle* handle = enif_alloc_resource(RES_HANDLE_TYPE, sizeof(SourceHandle));
+  SourceHandle* handle = enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SourceHandle));
   handle->is_zombie = 0;
   handle->destination = destination;
   handle->stream = NULL;
@@ -122,10 +96,10 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 }
 
 
-static ERL_NIF_TERM export_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM export_source_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
 
-  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_HANDLE_TYPE);
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_SOURCE_HANDLE_TYPE);
 
   if(!handle->is_zombie) {
 
@@ -137,12 +111,3 @@ static ERL_NIF_TERM export_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM
 
   return membrane_util_make_ok(env);
 }
-
-
-static ErlNifFunc nif_funcs[] = {
-  {"create", 4, export_create, 0},
-  {"destroy", 1, export_destroy, 0}
-};
-
-
-ERL_NIF_INIT(Elixir.Membrane.Element.PortAudio.Source.Native.Nif, nif_funcs, load, NULL, NULL, unload)

@@ -5,7 +5,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   use Membrane.Element.Base.Sink
   alias Membrane.Buffer
-  alias __MODULE__.Native
+  alias Membrane.Element.PortAudio.Native
   alias Membrane.Caps.Audio.Raw, as: Caps
   use Membrane.Mixins.Log
 
@@ -68,7 +68,7 @@ defmodule Membrane.Element.PortAudio.Sink do
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
     with {:ok, native} <-
-           Native.create(self(), endpoint_id, ringbuffer_size, pa_buffer_size, latency) do
+           Native.create_sink(self(), endpoint_id, ringbuffer_size, pa_buffer_size, latency) do
       {:ok, %{state | native: native}}
     else
       {:error, reason} -> {{:error, reason}, state}
@@ -77,7 +77,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   @impl true
   def handle_prepare(:playing, %{native: native} = state) do
-    {Native.destroy(native), %{state | native: nil, playing: false}}
+    {Native.destroy_sink(native), %{state | native: nil, playing: false}}
   end
 
   @impl true

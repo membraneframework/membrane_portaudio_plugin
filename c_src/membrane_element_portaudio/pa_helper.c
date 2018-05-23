@@ -1,4 +1,4 @@
-#include "pa_stream.h"
+#include "pa_helper.h"
 #define MEMBRANE_LOG_TAG log_tag
 #include <membrane/log.h>
 
@@ -7,14 +7,27 @@ char* init_pa(
   PaSampleFormat sample_format, int sample_rate, int channels, char* latency_str,
   int pa_buffer_size, PaDeviceIndex endpoint_id, PaStreamCallback* callback
 ) {
+
+  enif_mutex_lock(pa_mutex);
+
   PaError error;
 
-  if(endpoint_id == paNoDevice)
+  error = Pa_Initialize();
+  if(error != paNoError) {
+    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
+    enif_mutex_unlock(pa_mutex);
+    return "pa_init_error";
+  }
+
+
+  if(endpoint_id == paNoDevice) {
     endpoint_id = direction ? Pa_GetDefaultOutputDevice() : Pa_GetDefaultInputDevice();
+  }
 
   const PaDeviceInfo* device_info = Pa_GetDeviceInfo(endpoint_id);
   if(!device_info) {
     MEMBRANE_WARN(env, "Invalid endpoint id: %d", endpoint_id);
+    enif_mutex_unlock(pa_mutex);
     return "invalid_endpoint_id";
   }
 
@@ -23,6 +36,7 @@ char* init_pa(
   else if (!strcmp(latency_str, "low")) latency = device_info->defaultLowOutputLatency;
   else {
     MEMBRANE_WARN(env, "Invalid latency: %s", latency_str);
+    enif_mutex_unlock(pa_mutex);
     return "invalid_latency";
   }
 
@@ -54,19 +68,25 @@ char* init_pa(
 
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_OpenStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    enif_mutex_unlock(pa_mutex);
     return "pa_open_stream";
   }
 
   error = Pa_StartStream(*stream);
   if(error != paNoError) {
     MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
+    enif_mutex_unlock(pa_mutex);
     return "pa_start_stream";
   }
 
+  enif_mutex_unlock(pa_mutex);
   return NULL;
 }
 
 char* destroy_pa(ErlNifEnv* env, char* log_tag, PaStream* stream) {
+
+  enif_mutex_lock(pa_mutex);
+
   PaError pa_error;
   char* error = NULL;
 
@@ -86,7 +106,11 @@ char* destroy_pa(ErlNifEnv* env, char* log_tag, PaStream* stream) {
     }
   }
 
+  pa_error = Pa_Terminate();
+  if(pa_error != paNoError) {
+    MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
+  }
 
-
+  enif_mutex_unlock(pa_mutex);
   return error;
 }

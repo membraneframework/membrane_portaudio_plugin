@@ -6,15 +6,15 @@
 
 
 #include "sink.h"
+#define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Sink.Native"
+#include <membrane/log.h>
 
 #define FRAME_SIZE 4 // FIXME hardcoded format, stereo frame, 16bit
 
 #define UNUSED(x) (void)(x)
 
-ErlNifResourceType *RES_HANDLE_TYPE;
 
-
-static void res_handle_destructor(ErlNifEnv *env, void *value) {
+void res_sink_handle_destructor(ErlNifEnv *env, void *value) {
   SinkHandle *handle = (SinkHandle *) value;
   if(handle->is_zombie) return;
 
@@ -26,33 +26,6 @@ static void res_handle_destructor(ErlNifEnv *env, void *value) {
     membrane_ringbuffer_destroy(handle->ringbuffer);
   }
 }
-
-
-static int load(ErlNifEnv *env, void **_priv_data, ERL_NIF_TERM _load_info) {
-  UNUSED(_priv_data);
-  UNUSED(_load_info);
-  int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
-  RES_HANDLE_TYPE =
-    enif_open_resource_type(env, NULL, "SinkHandle", res_handle_destructor, flags, NULL);
-
-  PaError pa_error = Pa_Initialize();
-  if(pa_error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
-    return -1;
-  }
-
-  return 0;
-}
-
-static void unload(ErlNifEnv* env, void* _priv_data) {
-  UNUSED(_priv_data);
-  PaError pa_error = Pa_Terminate();
-  if(pa_error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
-  }
-}
-
-
 
 static void send_demand(unsigned int size, ErlNifPid demand_handler) {
   ErlNifEnv* msg_env = enif_alloc_env();
@@ -90,10 +63,10 @@ static int callback(const void *_input_buffer, void *output_buffer, unsigned lon
 }
 
 
-static ERL_NIF_TERM export_write(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM export_write(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
 
-  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SinkHandle, RES_HANDLE_TYPE);
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SinkHandle, RES_SINK_HANDLE_TYPE);
   MEMBRANE_UTIL_PARSE_BINARY_ARG(1, payload_binary);
 
   size_t elements_written = membrane_ringbuffer_write(handle->ringbuffer, payload_binary.data, payload_binary.size / FRAME_SIZE);
@@ -104,7 +77,7 @@ static ERL_NIF_TERM export_write(ErlNifEnv* env, int _argc, const ERL_NIF_TERM a
   return membrane_util_make_ok(env);
 }
 
-static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM export_sink_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
 
   MEMBRANE_UTIL_PARSE_PID_ARG(0, demand_handler);
@@ -123,7 +96,7 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 
   send_demand(ringbuffer_size*FRAME_SIZE, demand_handler);
 
-  SinkHandle* handle = enif_alloc_resource(RES_HANDLE_TYPE, sizeof(SinkHandle));
+  SinkHandle* handle = enif_alloc_resource(RES_SINK_HANDLE_TYPE, sizeof(SinkHandle));
   handle->is_zombie = 0;
   handle->ringbuffer = ringbuffer;
   handle->demand_handler = demand_handler;
@@ -156,10 +129,10 @@ static ERL_NIF_TERM export_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 }
 
 
-static ERL_NIF_TERM export_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM export_sink_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
 
-  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SinkHandle, RES_HANDLE_TYPE);
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SinkHandle, RES_SINK_HANDLE_TYPE);
 
   if(!handle->is_zombie) {
 
@@ -176,12 +149,3 @@ static ERL_NIF_TERM export_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM
 
   return membrane_util_make_ok(env);
 }
-
-static ErlNifFunc nif_funcs[] = {
-  {"create", 5, export_create, 0},
-  {"write", 2, export_write, 0},
-  {"destroy", 1, export_destroy, 0}
-};
-
-
-ERL_NIF_INIT(Elixir.Membrane.Element.PortAudio.Sink.Native.Nif, nif_funcs, load, NULL, NULL, unload)
