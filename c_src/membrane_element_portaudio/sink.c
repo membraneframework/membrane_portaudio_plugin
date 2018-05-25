@@ -24,7 +24,7 @@ static void send_demand(unsigned int size, ErlNifPid demand_handler) {
   ErlNifEnv* msg_env = enif_alloc_env();
 
   ERL_NIF_TERM tuple[2] = {
-    enif_make_atom(msg_env, "ringbuffer_demand"),
+    enif_make_atom(msg_env, "membrane_element_portaudio_ringbuffer_demand"),
     enif_make_int(msg_env, (int)size),
   };
   ERL_NIF_TERM msg = enif_make_tuple_from_array(msg_env, tuple, 2);

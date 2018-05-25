@@ -87,12 +87,15 @@ defmodule Membrane.Element.PortAudio.Sink do
   end
 
   @impl true
-  def handle_other({:ringbuffer_demand, size}, %{playing: true} = state) do
+  def handle_other(
+        {:membrane_element_portaudio_ringbuffer_demand, size},
+        %{playing: true} = state
+      ) do
     {{:ok, demand: {:sink, size}}, state}
   end
 
   @impl true
-  def handle_other({:ringbuffer_demand, _size}, state) do
+  def handle_other({:membrane_element_portaudio_ringbuffer_demand, _size}, state) do
     {:ok, state}
   end
 
