@@ -7,14 +7,12 @@ defmodule Membrane.Element.PortAudio.Mixfile do
       app: :membrane_element_portaudio,
       compilers: [:bundlex] ++ Mix.compilers(),
       version: "0.0.1",
-      elixir: "~> 1.3",
+      elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       description: "Membrane Multimedia Framework (PortAudio Element)",
-      maintainers: ["Marcin Lewandowski"],
-      licenses: ["LGPL"],
+      package: package(),
       name: "Membrane Element: PortAudio",
       source_url: "https://github.com/membraneframework/membrane-element-portaudio",
-      preferred_cli_env: [espec: :test],
       deps: deps()
     ]
   end
@@ -33,6 +31,13 @@ defmodule Membrane.Element.PortAudio.Mixfile do
       {:membrane_caps_audio_raw,
        git: "git@github.com:membraneframework/membrane-caps-audio-raw.git"},
       {:bundlex, git: "git@github.com:radiokit/bundlex.git"}
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: ["Membrane Team"],
+      licenses: ["Apache 2.0"]
     ]
   end
 end

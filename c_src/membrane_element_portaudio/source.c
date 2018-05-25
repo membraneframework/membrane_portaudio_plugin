@@ -1,10 +1,3 @@
-/**
- * Membrane Element: PortAudio - Erlang native interface for portaudio-based source
- *
- * All Rights Reserved, (c) 2016 Marcin Lewandowski
- */
-
-
 #include "source.h"
 #define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Source.Native"
 #include <membrane/log.h>

@@ -3,42 +3,60 @@
 This package provides elements that can be used to capture and play sound
 using multiplatform PortAudio library.
 
-
 # Installation
 
-Add the following line to your `deps` in `mix.exs`.  Run `mix deps.get`.
+Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_element_portaudio, git: "git@bitbucket.org:radiokit/membrane-element-portaudio.git"}
+{:membrane_element_portaudio, git: "git@github.com/membraneframework/membrane-element-portaudio.git"}
 ```
 
-Then add the following line to your `applications` in `mix.exs`.
-
-```elixir
-:membrane_element_portaudio
-```
+You also need to have [PortAudio](http://portaudio.com/) installed.
 
 # Sample usage
 
-This should create a loopback between default capture and playback device:
+Playing below pipeline should play a raw file to default output device.
 
 ```elixir
-{:ok, sink} = Membrane.Element.PortAudio.Sink.start_link(%Membrane.Element.PortAudio.SinkOptions{})
-{:ok, source} = Membrane.Element.PortAudio.Source.start_link(%Membrane.Element.PortAudio.SourceOptions{})
-Membrane.Element.link(source, sink)
-Membrane.Element.play(sink)
-Membrane.Element.play(source)
+defmodule Membrane.ReleaseTest.Pipeline do
+  use Membrane.Pipeline
+  alias Pipeline.Spec
+  alias Membrane.Element.{PortAudio, File}
+
+  @impl true
+  def handle_init(_) do
+    children = [
+      file_src: %File.Source{location: "file.raw"},
+      pa_sink: PortAudio.Sink
+    ]
+    links = %{
+      {:file_src, :source} => {:pa_sink, :sink}
+    }
+
+    {{:ok, %Spec{children: children, links: links}}, %{}}
+  end
+end
 ```
 
+And this one should forward sound from default input to default output. DO NOT USE WITHOUT HEADPHONES to avoid audio feedback.
 
-# Authors
+```elixir
+defmodule Membrane.ReleaseTest.Pipeline do
+  use Membrane.Pipeline
+  alias Pipeline.Spec
+  alias Membrane.Element.PortAudio
 
-* Marcin Lewandowski
+  @impl true
+  def handle_init(_) do
+    children = [
+      pa_src: PortAudio.Source,
+      pa_sink: PortAudio.Sink
+    ]
+    links = %{
+      {:pa_src, :source} => {:pa_sink, :sink, pull_buffer: [toilet: true]}
+    }
 
-Ringbuffer code ported from PortAudio:
-
-* Author: Phil Burk, http://www.softsynth.com
-* modified for SMP safety on Mac OS X by Bjorn Roche
-* modified for SMP safety on Linux by Leland Lucius
-* also, allowed for const where possible
-* modified for multiple-byte-sized data elements by Sven Fischer
+    {{:ok, %Spec{children: children, links: links}}, %{}}
+  end
+end
+```

@@ -1,10 +1,3 @@
-/**
- * Membrane Element: PortAudio - Erlang native interface for portaudio-based source
- *
- * All Rights Reserved, (c) 2016 Marcin Lewandowski
- */
-
-
 #pragma once
 
 #include <stdio.h>
