@@ -10,7 +10,7 @@ defmodule Membrane.Element.Portaudio.SourceTest do
 
   def state(_ctx) do
     state = %{
-      endpoint_id: 10,
+      endpoint_id: :default,
       pa_buffer_size: 256,
       latency: :high,
       native: nil,
@@ -47,6 +47,29 @@ defmodule Membrane.Element.Portaudio.SourceTest do
 
       %{native: native} = state
       assert_called(Native, :destroy_source, [^native])
+    end
+  end
+
+  describe "soundcard_requiring_tests" do
+    @describetag soundcard: true
+
+    test "multiple parallel restarts should not cause errors", %{state: state} do
+      1..20
+      |> Task.async_stream(
+        fn _ ->
+          assert {{:ok, [_caps]}, state} = @module.handle_play(state)
+          :timer.sleep(10..200 |> Enum.random())
+          assert {:ok, _state} = @module.handle_prepare(:playing, state)
+        end,
+        max_concurrency: 4
+      )
+      |> Stream.run()
+    end
+
+    test "after starting some buffers should be received", %{state: state} do
+      assert {{:ok, [_caps]}, state} = @module.handle_play(state)
+      assert_receive({:membrane_element_portaudio_source_packet, _payload}, 1000)
+      assert {:ok, _state} = @module.handle_prepare(:playing, state)
     end
   end
 end

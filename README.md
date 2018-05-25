@@ -60,3 +60,10 @@ defmodule Membrane.ReleaseTest.Pipeline do
   end
 end
 ```
+
+# Testing
+
+Tests contain some cases that use portaudio stuff instead of mocking. Such cases require presence of at least one input and output soundcard, thus they are disabled by default. To enable them, run
+```
+mix test --include soundcard
+```

@@ -10,7 +10,7 @@ defmodule Membrane.Element.Portaudio.SinkTest do
 
   def state(_ctx) do
     state = %{
-      endpoint_id: 10,
+      endpoint_id: :default,
       ringbuffer_size: 4096,
       pa_buffer_size: 256,
       latency: :high,
@@ -58,6 +58,30 @@ defmodule Membrane.Element.Portaudio.SinkTest do
 
       %{native: native} = state
       assert_called(Native, :destroy_sink, [^native])
+    end
+  end
+
+  describe "soundcard_requiring_tests" do
+    @describetag soundcard: true
+
+    test "multiple parallel restarts should not cause errors", %{state: state} do
+      1..20
+      |> Task.async_stream(
+        fn _ ->
+          assert {:ok, state} = @module.handle_play(state)
+          :timer.sleep(10..200 |> Enum.random())
+          assert {:ok, _state} = @module.handle_prepare(:playing, state)
+        end,
+        max_concurrency: 4
+      )
+      |> Stream.run()
+    end
+
+    test "after starting initial demand of size of ringbuffer should be received", %{state: state} do
+      assert {:ok, state} = @module.handle_play(state)
+      assert_receive({:membrane_element_portaudio_ringbuffer_demand, initial_demand_size}, 1000)
+      assert initial_demand_size == 4 * state.ringbuffer_size
+      assert {:ok, _state} = @module.handle_prepare(:playing, state)
     end
   end
 end
