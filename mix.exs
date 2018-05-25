@@ -30,7 +30,8 @@ defmodule Membrane.Element.PortAudio.Mixfile do
       {:membrane_common_c, git: "git@github.com:membraneframework/membrane-common-c.git"},
       {:membrane_caps_audio_raw,
        git: "git@github.com:membraneframework/membrane-caps-audio-raw.git"},
-      {:bundlex, git: "git@github.com:radiokit/bundlex.git"}
+      {:bundlex, git: "git@github.com:radiokit/bundlex.git"},
+      {:mockery, "~> 2.1", runtime: false}
     ]
   end
 
