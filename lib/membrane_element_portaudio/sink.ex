@@ -5,58 +5,102 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   use Membrane.Element.Base.Sink
   alias Membrane.Buffer
-  alias Membrane.Element.PortAudio.SinkNative
-  alias Membrane.Element.PortAudio.SinkOptions
+  alias Membrane.Caps.Audio.Raw, as: Caps
   use Membrane.Mixins.Log
 
-  # FIXME format is hardcoded at the moment
-  @supported_caps %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}
+  @native Mockery.of(Membrane.Element.PortAudio.Native)
 
-  def_known_sink_pads %{
-    :sink => {:always, :pull, [@supported_caps]}
-  }
+  @pa_no_device -1
 
+  # FIXME hardcoded caps
+  def_known_sink_pads sink:
+                        {:always, {:pull, demand_in: :bytes},
+                         {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
-  # Private API
+  def_options endpoint_id: [
+                type: :integer,
+                spec: integer | :default,
+                default: :default,
+                description: "PortAudio sound card id"
+              ],
+              ringbuffer_size: [
+                type: :integer,
+                spec: pos_integer,
+                default: 4096,
+                description: "Size of the ringbuffer (in frames)"
+              ],
+              portaudio_buffer_size: [
+                type: :integer,
+                spec: pos_integer,
+                default: 256,
+                description: "Size of the portaudio buffer (in frames)"
+              ],
+              latency: [
+                type: :atom,
+                spec: :low | :high,
+                default: :high,
+                description: "Latency of the output device"
+              ]
 
-  @doc false
-  def handle_init(%SinkOptions{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
-    {:ok, %{
+  @impl true
+  def handle_init(%__MODULE__{} = options) do
+    {:ok,
+     %{
+       endpoint_id: options.endpoint_id,
+       ringbuffer_size: options.ringbuffer_size,
+       pa_buffer_size: options.portaudio_buffer_size,
+       latency: options.latency,
+       native: nil,
+       playing: false
+     }}
+  end
+
+  @impl true
+  def handle_play(state) do
+    %{
       endpoint_id: endpoint_id,
-      buffer_size: buffer_size,
-      native: nil,
-    }}
-  end
+      ringbuffer_size: ringbuffer_size,
+      pa_buffer_size: pa_buffer_size,
+      latency: latency
+    } = state
 
+    state = %{state | playing: true}
 
-  @doc false
-  def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    with {:ok, native} <- SinkNative.create(endpoint_id, buffer_size, self())
-    do {:ok, {[
-          # {:caps, {:sink, @supported_caps}} # WTF?
-        ], %{state | native: native}}}
-    else {:error, reason} -> {:error, {:create, reason}, state}
+    endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
+
+    with {:ok, native} <-
+           @native.create_sink(self(), endpoint_id, ringbuffer_size, pa_buffer_size, latency) do
+      {:ok, %{state | native: native}}
+    else
+      {:error, reason} -> {{:error, reason}, state}
     end
   end
 
-
-  @doc false
-  def handle_prepare(:playing, state) do
-    {:ok, {[], %{state | native: nil}}}
+  @impl true
+  def handle_prepare(:playing, %{native: native} = state) do
+    {@native.destroy_sink(native), %{state | native: nil, playing: false}}
   end
 
-  @doc false
-  def handle_other({:ringbuffer_demand, size} = msg, state) do
-    debug inspect msg
-    {:ok, {[{:demand, {:sink, size |> div(state.buffer_size)}}], state}}
+  @impl true
+  def handle_prepare(_, state) do
+    {:ok, state}
   end
 
+  @impl true
+  def handle_other(
+        {:membrane_element_portaudio_ringbuffer_demand, size},
+        %{playing: true} = state
+      ) do
+    {{:ok, demand: {:sink, size}}, state}
+  end
 
-  @doc false
+  @impl true
+  def handle_other({:membrane_element_portaudio_ringbuffer_demand, _size}, state) do
+    {:ok, state}
+  end
+
+  @impl true
   def handle_write1(:sink, %Buffer{payload: payload}, _, %{native: native} = state) do
-    with :ok <- SinkNative.write(native, payload)
-    do {:ok, {[], state}}
-    else {:error, reason} -> {:error, {:write, reason}, state}
-    end
+    {@native.write(native, payload), state}
   end
 end

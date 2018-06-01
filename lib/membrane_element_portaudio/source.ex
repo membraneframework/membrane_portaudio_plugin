@@ -5,68 +5,86 @@ defmodule Membrane.Element.PortAudio.Source do
 
   use Membrane.Element.Base.Source
   alias Membrane.Buffer
-  alias Membrane.Element.PortAudio.SourceOptions
-  alias Membrane.Element.PortAudio.SourceNative
+  alias Membrane.Caps.Audio.Raw, as: Caps
 
-  # FIXME format is hardcoded at the moment
-  @supported_caps %Membrane.Caps.Audio.Raw{channels: 2, sample_rate: 48000, format: :s16le}
+  @native Mockery.of(Membrane.Element.PortAudio.Native)
 
-  def_known_source_pads %{
-    :source => {:always, :push, [@supported_caps]}
-  }
+  @pa_no_device -1
 
+  # FIXME hardcoded caps
+  def_known_source_pads source:
+                          {:always, :push,
+                           {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
 
-  # Private API
+  def_options endpoint_id: [
+                type: :integer,
+                spec: integer | :default,
+                default: :default,
+                description: "PortAudio sound card id"
+              ],
+              portaudio_buffer_size: [
+                type: :integer,
+                spec: pos_integer,
+                default: 256,
+                description: "Size of the portaudio buffer (in frames)"
+              ],
+              latency: [
+                type: :atom,
+                spec: :low | :high,
+                default: :high,
+                description: "Latency of the output device"
+              ]
 
-  @doc false
-  def handle_init(%SourceOptions{endpoint_id: endpoint_id, buffer_size: buffer_size}) do
-    {:ok, %{
+  @impl true
+  def handle_init(%__MODULE__{} = options) do
+    {:ok,
+     %{
+       endpoint_id: options.endpoint_id,
+       pa_buffer_size: options.portaudio_buffer_size,
+       latency: options.latency,
+       native: nil,
+       playing: false
+     }}
+  end
+
+  @impl true
+  def handle_play(state) do
+    %{
       endpoint_id: endpoint_id,
-      buffer_size: buffer_size,
-      native: nil,
-    }}
-  end
+      pa_buffer_size: pa_buffer_size,
+      latency: latency
+    } = state
 
+    state = %{state | playing: true}
 
-  @doc false
-  def handle_prepare(:stopped, %{endpoint_id: endpoint_id, buffer_size: buffer_size} = state) do
-    with {:ok, native} <- SourceNative.create(endpoint_id, self(), buffer_size)
-    do {:ok, {[
-          {:caps, {:source, @supported_caps}}
-        ], %{state | native: native}}}
-    else {:error, reason} -> {:error, {:create, reason}, state}
+    endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
+
+    with {:ok, native} <- @native.create_source(self(), endpoint_id, pa_buffer_size, latency) do
+      # FIXME hardcoded caps
+      {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}},
+       %{state | native: native}}
+    else
+      {:error, reason} -> {{:error, reason}, state}
     end
   end
 
-
-  @doc false
-  def handle_prepare(:playing, state) do
-    {:ok, {[], %{state | native: nil}}}
+  @impl true
+  def handle_prepare(:playing, %{native: native} = state) do
+    {@native.destroy_source(native), %{state | native: nil, playing: false}}
   end
 
-
-  @doc false
-  def handle_play(%{native: native} = state) do
-    with :ok <- SourceNative.start(native)
-    do {:ok, {[], state}}
-    else {:error, reason} -> {:error, {:start, reason}, state}
-    end
+  @impl true
+  def handle_prepare(_, state) do
+    {:ok, state}
   end
 
-
-  @doc false
-  def handle_stop(%{native: native} = state) do
-    with :ok <- SourceNative.start(native)
-    do {:ok, {[], state}}
-    else {:error, reason} -> {:error, {:stop, reason}, state}
-    end
+  @impl true
+  def handle_other({:membrane_element_portaudio_source_packet, payload}, %{playing: true} = state) do
+    {{:ok, buffer: {:source, %Buffer{payload: payload}}}, state}
   end
 
-
-  @doc false
-  def handle_other({:membrane_element_portaudio_source_packet, payload}, state) do
-    {:ok, {[
-      {:buffer, {:source, %Buffer{payload: payload}}},
-    ], state}}
+  @impl true
+  def handle_other({:membrane_element_portaudio_source_packet, _payload}, state) do
+    {:ok, state}
   end
 end
