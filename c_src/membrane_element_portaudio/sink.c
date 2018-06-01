@@ -9,7 +9,7 @@
 
 void res_sink_handle_destructor(ErlNifEnv *env, void *value) {
   SinkHandle *handle = (SinkHandle *) value;
-  if(handle->is_zombie) return;
+  if(handle->is_content_destroyed) return;
 
   MEMBRANE_DEBUG(env, "Destroying SinkHandle %p", value);
 
@@ -66,6 +66,7 @@ ERL_NIF_TERM export_write(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) 
   // MEMBRANE_DEBUG(env, "Write: elements written = %d", elements_written);
   if(elements_written != payload_binary.size / FRAME_SIZE) {
     MEMBRANE_WARN(env, "Write: written only %d out of %lu bytes into ringbuffer", elements_written * FRAME_SIZE, payload_binary.size);
+    return membrane_util_make_error_internal(env, "overrun");
   }
   return membrane_util_make_ok(env);
 }
@@ -90,7 +91,7 @@ ERL_NIF_TERM export_sink_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM ar
   send_demand(ringbuffer_size*FRAME_SIZE, demand_handler);
 
   SinkHandle* handle = enif_alloc_resource(RES_SINK_HANDLE_TYPE, sizeof(SinkHandle));
-  handle->is_zombie = 0;
+  handle->is_content_destroyed = 0;
   handle->ringbuffer = ringbuffer;
   handle->demand_handler = demand_handler;
   handle->stream = NULL;
@@ -127,7 +128,7 @@ ERL_NIF_TERM export_sink_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM a
 
   MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SinkHandle, RES_SINK_HANDLE_TYPE);
 
-  if(!handle->is_zombie) {
+  if(!handle->is_content_destroyed) {
 
     destroy_pa(env, MEMBRANE_LOG_TAG, handle->stream);
     handle->stream = NULL;
@@ -137,7 +138,7 @@ ERL_NIF_TERM export_sink_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM a
       handle->ringbuffer = NULL;
     }
 
-    handle->is_zombie = 1;
+    handle->is_content_destroyed = 1;
   }
 
   return membrane_util_make_ok(env);

@@ -6,7 +6,7 @@
 
 void res_source_handle_destructor(ErlNifEnv *env, void *value) {
   SourceHandle *handle = (SourceHandle *) value;
-  if(handle->is_zombie) return;
+  if(handle->is_content_destroyed) return;
 
   MEMBRANE_DEBUG(env, "Destroying SourceHandle %p", value);
 
@@ -58,7 +58,7 @@ ERL_NIF_TERM export_source_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
   MEMBRANE_DEBUG(env, "initializing");
 
   SourceHandle* handle = enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SourceHandle));
-  handle->is_zombie = 0;
+  handle->is_content_destroyed = 0;
   handle->destination = destination;
   handle->stream = NULL;
 
@@ -94,12 +94,12 @@ ERL_NIF_TERM export_source_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM
 
   MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_SOURCE_HANDLE_TYPE);
 
-  if(!handle->is_zombie) {
+  if(!handle->is_content_destroyed) {
 
     destroy_pa(env, MEMBRANE_LOG_TAG, handle->stream);
     handle->stream = NULL;
 
-    handle->is_zombie = 1;
+    handle->is_content_destroyed = 1;
   }
 
   return membrane_util_make_ok(env);

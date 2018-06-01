@@ -13,7 +13,7 @@ typedef struct _SinkHandle SinkHandle;
 
 struct _SinkHandle
 {
-  char is_zombie;
+  int is_content_destroyed;
   PaStream* stream;
   MembraneRingBuffer* ringbuffer;
   ErlNifPid demand_handler; // Where to send demands

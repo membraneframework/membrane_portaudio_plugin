@@ -10,13 +10,14 @@ char* init_pa(
 
   enif_mutex_lock(pa_mutex);
 
-  PaError error;
+  char* ret_error = NULL;
+  PaError pa_error;
 
-  error = Pa_Initialize();
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", error, Pa_GetErrorText(error));
-    enif_mutex_unlock(pa_mutex);
-    return "pa_init_error";
+  pa_error = Pa_Initialize();
+  if(pa_error != paNoError) {
+    MEMBRANE_WARN(env, "Pa_Initialize: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
+    ret_error = "pa_init_error";
+    goto error;
   }
 
 
@@ -27,8 +28,8 @@ char* init_pa(
   const PaDeviceInfo* device_info = Pa_GetDeviceInfo(endpoint_id);
   if(!device_info) {
     MEMBRANE_WARN(env, "Invalid endpoint id: %d", endpoint_id);
-    enif_mutex_unlock(pa_mutex);
-    return "invalid_endpoint_id";
+    ret_error = "invalid_endpoint_id";
+    goto error;
   }
 
   PaTime latency;
@@ -36,8 +37,8 @@ char* init_pa(
   else if (!strcmp(latency_str, "low")) latency = device_info->defaultLowOutputLatency;
   else {
     MEMBRANE_WARN(env, "Invalid latency: %s", latency_str);
-    enif_mutex_unlock(pa_mutex);
-    return "invalid_latency";
+    ret_error = "invalid_latency";
+    goto error;
   }
 
   PaStreamParameters stream_params = {
@@ -55,7 +56,7 @@ char* init_pa(
   else
     input_stream_params_ptr = &stream_params;
 
-  error = Pa_OpenStream(
+  pa_error = Pa_OpenStream(
     stream,
     input_stream_params_ptr,
     output_stream_params_ptr,
@@ -66,21 +67,22 @@ char* init_pa(
     handle // passed to the callback
   );
 
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_OpenStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    enif_mutex_unlock(pa_mutex);
-    return "pa_open_stream";
+  if(pa_error != paNoError) {
+    MEMBRANE_WARN(env, "Pa_OpenStream: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
+    ret_error = "pa_open_stream";
+    goto error;
   }
 
-  error = Pa_StartStream(*stream);
-  if(error != paNoError) {
-    MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", error, Pa_GetErrorText(error));
-    enif_mutex_unlock(pa_mutex);
-    return "pa_start_stream";
+  pa_error = Pa_StartStream(*stream);
+  if(pa_error != paNoError) {
+    MEMBRANE_WARN(env, "Pa_StartStream: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
+    ret_error = "pa_start_stream";
+    goto error;
   }
 
+  error:
   enif_mutex_unlock(pa_mutex);
-  return NULL;
+  return ret_error;
 }
 
 char* destroy_pa(ErlNifEnv* env, char* log_tag, PaStream* stream) {
