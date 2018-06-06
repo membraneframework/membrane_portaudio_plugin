@@ -31,7 +31,7 @@ defmodule Membrane.Element.Portaudio.SourceTest do
       ref = make_ref()
       mock(Native, [create_source: 4], {:ok, ref})
 
-      assert {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}},
+      assert {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48_000, format: :s16le}}},
               %{state | native: ref, playing: true}} == @module.handle_play(state)
     end
   end

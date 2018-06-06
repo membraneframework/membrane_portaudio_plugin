@@ -15,7 +15,7 @@ defmodule Membrane.Element.PortAudio.Sink do
   # FIXME hardcoded caps
   def_known_sink_pads sink:
                         {:always, {:pull, demand_in: :bytes},
-                         {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
+                         {Caps, channels: 2, sample_rate: 48_000, format: :s16le}}
 
   def_options endpoint_id: [
                 type: :integer,

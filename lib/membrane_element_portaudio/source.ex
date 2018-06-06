@@ -14,7 +14,7 @@ defmodule Membrane.Element.PortAudio.Source do
   # FIXME hardcoded caps
   def_known_source_pads source:
                           {:always, :push,
-                           {Caps, channels: 2, sample_rate: 48000, format: :s16le}}
+                           {Caps, channels: 2, sample_rate: 48_000, format: :s16le}}
 
   def_options endpoint_id: [
                 type: :integer,
@@ -61,7 +61,7 @@ defmodule Membrane.Element.PortAudio.Source do
 
     with {:ok, native} <- @native.create_source(self(), endpoint_id, pa_buffer_size, latency) do
       # FIXME hardcoded caps
-      {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48000, format: :s16le}}},
+      {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48_000, format: :s16le}}},
        %{state | native: native}}
     else
       {:error, reason} -> {{:error, reason}, state}
