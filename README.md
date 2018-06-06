@@ -1,19 +1,22 @@
 # Membrane Multimedia Framework: PortAudio Element
 
-This package provides elements that can be used to capture and play sound
+This package provides [Membrane Multimedia Framework](https://membraneframework.org)
+elements that can be used to capture and play sound
 using multiplatform PortAudio library.
 
-# Installation
+Documentation is available at [HexDocs](https://hexdocs.pm/membrane_element_portaudio/)
+
+## Installation
 
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_element_portaudio, git: "git@github.com/membraneframework/membrane-element-portaudio.git"}
+{:membrane_element_portaudio, "~> 0.1"}
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
 
-# Sample usage
+## Sample usage
 
 Playing below pipeline should play a raw file to default output device.
 
@@ -61,7 +64,7 @@ defmodule Membrane.ReleaseTest.Pipeline do
 end
 ```
 
-# Testing
+## Testing
 
 Tests contain some cases that use portaudio stuff instead of mocking. Such cases require presence of at least one input and output soundcard, thus they are disabled by default. To enable them, run
 ```
