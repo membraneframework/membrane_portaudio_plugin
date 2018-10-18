@@ -6,7 +6,6 @@ defmodule Membrane.Element.PortAudio.Sink do
   use Membrane.Element.Base.Sink
   alias Membrane.Buffer
   alias Membrane.Caps.Audio.Raw, as: Caps
-  use Membrane.Mixins.Log
 
   @native Mockery.of(Membrane.Element.PortAudio.Native)
 

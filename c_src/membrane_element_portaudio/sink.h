@@ -17,6 +17,7 @@ struct _SinkHandle
   PaStream* stream;
   MembraneRingBuffer* ringbuffer;
   ErlNifPid demand_handler; // Where to send demands
+  int demand;
 };
 
 ErlNifResourceType *RES_SINK_HANDLE_TYPE;

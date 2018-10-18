@@ -1,6 +1,5 @@
 defmodule Membrane.Element.PortAudio.Mixfile do
   use Mix.Project
-  Application.put_env(:bundlex, :membrane_element_portaudio, __ENV__)
 
   @github_url "https://github.com/membraneframework/membrane-element-portaudio"
 

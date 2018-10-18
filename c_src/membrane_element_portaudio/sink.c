@@ -47,7 +47,12 @@ static int callback(const void *_input_buffer, void *output_buffer, unsigned lon
   if(elements_available >= frames_per_buffer) {
     size_t elements_read = membrane_ringbuffer_read(handle->ringbuffer, output_buffer, frames_per_buffer);
     MEMBRANE_THREADED_DEBUG("Callback: elements available = %d, elements read = %d, frames per buffer = %lu", elements_available, elements_read, frames_per_buffer);
-    send_demand(elements_read*FRAME_SIZE, handle->demand_handler);
+    if(handle->demand+elements_read > handle->ringbuffer->max_elements/2) {
+      send_demand((handle->demand+elements_read)*FRAME_SIZE, handle->demand_handler);
+      handle->demand = 0;
+    } else {
+      handle->demand += elements_read;
+    }
   } else {
     memset(output_buffer, 0, frames_per_buffer * FRAME_SIZE);
   }
@@ -95,6 +100,7 @@ ERL_NIF_TERM export_sink_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM ar
   handle->ringbuffer = ringbuffer;
   handle->demand_handler = demand_handler;
   handle->stream = NULL;
+  handle->demand = 0;
 
   char* error = init_pa(
     env,
