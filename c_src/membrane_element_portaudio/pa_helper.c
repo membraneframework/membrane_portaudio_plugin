@@ -3,13 +3,10 @@
 #include <membrane/log.h>
 
 char* init_pa(
-  ErlNifEnv* env, char* log_tag, char direction, PaStream** stream, void* handle,
+  UnifexEnv* env, char* log_tag, char direction, PaStream** stream, void* state,
   PaSampleFormat sample_format, int sample_rate, int channels, char* latency_str,
   int pa_buffer_size, PaDeviceIndex endpoint_id, PaStreamCallback* callback
 ) {
-
-  enif_mutex_lock(pa_mutex);
-
   char* ret_error = NULL;
   PaError pa_error;
 
@@ -19,7 +16,6 @@ char* init_pa(
     ret_error = "pa_init_error";
     goto error;
   }
-
 
   if(endpoint_id == paNoDevice) {
     endpoint_id = direction ? Pa_GetDefaultOutputDevice() : Pa_GetDefaultInputDevice();
@@ -64,7 +60,7 @@ char* init_pa(
     pa_buffer_size,
     0, // PaStreamFlags
     callback,
-    handle // passed to the callback
+    state // passed to the callback
   );
 
   if(pa_error != paNoError) {
@@ -81,14 +77,10 @@ char* init_pa(
   }
 
   error:
-  enif_mutex_unlock(pa_mutex);
   return ret_error;
 }
 
-char* destroy_pa(ErlNifEnv* env, char* log_tag, PaStream* stream) {
-
-  enif_mutex_lock(pa_mutex);
-
+char* destroy_pa(UnifexEnv* env, char* log_tag, PaStream* stream) {
   PaError pa_error;
   char* error = NULL;
 
@@ -113,6 +105,5 @@ char* destroy_pa(ErlNifEnv* env, char* log_tag, PaStream* stream) {
     MEMBRANE_WARN(env, "Pa_Terminate: error = %d (%s)", pa_error, Pa_GetErrorText(pa_error));
   }
 
-  enif_mutex_unlock(pa_mutex);
   return error;
 }

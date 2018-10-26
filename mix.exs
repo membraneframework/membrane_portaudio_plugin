@@ -2,12 +2,13 @@ defmodule Membrane.Element.PortAudio.Mixfile do
   use Mix.Project
 
   @github_url "https://github.com/membraneframework/membrane-element-portaudio"
+  @version "0.1.0"
 
   def project do
     [
       app: :membrane_element_portaudio,
-      compilers: [:bundlex] ++ Mix.compilers(),
-      version: "0.1.0",
+      compilers: [:unifex, :bundlex] ++ Mix.compilers(),
+      version: @version,
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       description: "Membrane Multimedia Framework (PortAudio Element)",
@@ -28,19 +29,23 @@ defmodule Membrane.Element.PortAudio.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.1.0"},
-      {:membrane_common_c, "~> 0.1.0"},
-      {:membrane_caps_audio_raw, "~> 0.1.0"},
+      {:membrane_core, github: "membraneframework/membrane-core"},
+      {:membrane_common_c, github: "membraneframework/membrane-common-c"},
+      {:bunch, github: "membraneframework/bunch", override: true},
+      {:unifex, path: "../unifex", override: true},
+      # {:unifex, github: "membraneframework/unifex"},
+      {:membrane_caps_audio_raw, github: "membraneframework/membrane-caps-audio-raw"},
       {:bundlex, "~> 0.1.0"},
       {:mockery, "~> 2.1", runtime: false},
-      {:ex_doc, "~> 0.18", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
 
   defp docs do
     [
       main: "readme",
-      extras: ["README.md"]
+      extras: ["README.md"],
+      source_ref: "v#{@version}"
     ]
   end
 

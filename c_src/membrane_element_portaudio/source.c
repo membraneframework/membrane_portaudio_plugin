@@ -4,13 +4,13 @@
 
 #define UNUSED(x) (void)(x)
 
-void res_source_handle_destructor(ErlNifEnv *env, void *value) {
-  SourceHandle *handle = (SourceHandle *) value;
-  if(handle->is_content_destroyed) return;
+void res_source_state_destructor(ErlNifEnv *env, void *value) {
+  SourceState *state = (SourceState *) value;
+  if(state->is_content_destroyed) return;
 
-  MEMBRANE_DEBUG(env, "Destroying SourceHandle %p", value);
+  MEMBRANE_DEBUG(env, "Destroying SourceState %p", value);
 
-  destroy_pa(env, MEMBRANE_LOG_TAG, handle->stream);
+  destroy_pa(env, MEMBRANE_LOG_TAG, state->stream);
 }
 
 
@@ -21,7 +21,7 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
   ErlNifEnv *msg_env;
   ERL_NIF_TERM packet_term;
   size_t packet_size_in_bytes = frames * 2 * 2; // we use 16 bit, 2 channels
-  SourceHandle *handle = (SourceHandle *) user_data;
+  SourceState *state = (SourceState *) user_data;
 
 
   // Send packet upstream
@@ -37,7 +37,7 @@ static int callback(const void *input_buffer, void *_output_buffer, unsigned lon
   ERL_NIF_TERM msg = enif_make_tuple_from_array(msg_env, tuple, 2);
 
 
-  if(!enif_send(NULL, &handle->destination, msg_env, msg)) {
+  if(!enif_send(NULL, &state->destination, msg_env, msg)) {
     MEMBRANE_THREADED_WARN("Capture: packet send failed");
   }
 
@@ -57,17 +57,17 @@ ERL_NIF_TERM export_source_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
 
   MEMBRANE_DEBUG(env, "initializing");
 
-  SourceHandle* handle = enif_alloc_resource(RES_SOURCE_HANDLE_TYPE, sizeof(SourceHandle));
-  handle->is_content_destroyed = 0;
-  handle->destination = destination;
-  handle->stream = NULL;
+  SourceState* state = enif_alloc_resource(RES_SOURCE_STATE_TYPE, sizeof(SourceState));
+  state->is_content_destroyed = 0;
+  state->destination = destination;
+  state->stream = NULL;
 
   char* error = init_pa(
     env,
     MEMBRANE_LOG_TAG,
     0, //direction
-    &(handle->stream),
-    handle,
+    &(state->stream),
+    state,
     paInt16, //sample format #FIXME hardcoded0
     48000, //sample rate #FIXME hardcoded
     2, //channels #FIXME hardcoded
@@ -78,28 +78,28 @@ ERL_NIF_TERM export_source_create(ErlNifEnv* env, int _argc, const ERL_NIF_TERM 
   );
 
   if(error) {
-    enif_release_resource(handle);
+    enif_release_resource(state);
     return membrane_util_make_error_internal(env, error);
   }
 
-  ERL_NIF_TERM handle_term = enif_make_resource(env, handle);
-  enif_release_resource(handle);
+  ERL_NIF_TERM state_term = enif_make_resource(env, state);
+  enif_release_resource(state);
 
-  return membrane_util_make_ok_tuple(env, handle_term);
+  return membrane_util_make_ok_tuple(env, state_term);
 }
 
 
 ERL_NIF_TERM export_source_destroy(ErlNifEnv* env, int _argc, const ERL_NIF_TERM argv[]) {
   UNUSED(_argc);
 
-  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, handle, SourceHandle, RES_SOURCE_HANDLE_TYPE);
+  MEMBRANE_UTIL_PARSE_RESOURCE_ARG(0, state, SourceState, RES_SOURCE_STATE_TYPE);
 
-  if(!handle->is_content_destroyed) {
+  if(!state->is_content_destroyed) {
 
-    destroy_pa(env, MEMBRANE_LOG_TAG, handle->stream);
-    handle->stream = NULL;
+    destroy_pa(env, MEMBRANE_LOG_TAG, state->stream);
+    state->stream = NULL;
 
-    handle->is_content_destroyed = 1;
+    state->is_content_destroyed = 1;
   }
 
   return membrane_util_make_ok(env);
