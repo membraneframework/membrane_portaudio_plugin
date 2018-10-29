@@ -9,7 +9,7 @@ defmodule Membrane.Element.PortAudio.Mixfile do
       app: :membrane_element_portaudio,
       compilers: [:unifex, :bundlex] ++ Mix.compilers(),
       version: @version,
-      elixir: "~> 1.6",
+      elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       description: "Membrane Multimedia Framework (PortAudio Element)",
       package: package(),
