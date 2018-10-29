@@ -2,7 +2,7 @@
 #define MEMBRANE_LOG_TAG UNIFEX_MODULE
 #include <membrane/log.h>
 
-#define FRAME_SIZE 4 // FIXME hardcoded format, stereo frame, 16bit
+#define FRAME_SIZE 4 // TODO hardcoded format, stereo frame, 16bit
 
 void handle_destroy_state(UnifexEnv *env, SinkState *state) {
   if (state->is_content_destroyed)
@@ -35,8 +35,9 @@ static int callback(const void *_input_buffer, void *output_buffer,
     size_t elements_read = membrane_ringbuffer_read(
         state->ringbuffer, output_buffer, frames_per_buffer);
     if (state->demand + elements_read > state->ringbuffer->max_elements / 2) {
-      if (!send_demand(env, state->demand_handler, UNIFEX_SEND_THREADED,
-                       (state->demand + elements_read) * FRAME_SIZE)) {
+      if (!send_portaudio_demand(
+              env, state->demand_handler, UNIFEX_SEND_THREADED,
+              (state->demand + elements_read) * FRAME_SIZE)) {
         MEMBRANE_THREADED_WARN(env, "PortAudio sink: failed to send demand");
       }
       state->demand = 0;
@@ -46,7 +47,7 @@ static int callback(const void *_input_buffer, void *output_buffer,
   } else {
     memset(output_buffer, 0, frames_per_buffer * FRAME_SIZE);
   }
-  unifex_clear_env(env);
+  unifex_free_env(env);
   return paContinue;
 }
 
@@ -54,38 +55,48 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, int endpoint_id,
                    int ringbuffer_size, int pa_buffer_size, char *latency) {
   MEMBRANE_DEBUG(env, "initializing");
 
+  char *error;
+  SinkState *state = NULL;
+  UNIFEX_TERM res;
+
   MembraneRingBuffer *ringbuffer =
       membrane_ringbuffer_new(ringbuffer_size, FRAME_SIZE);
   if (!ringbuffer) {
     MEMBRANE_WARN(env, "Error initializing ringbuffer");
-    return create_result_error(env, "ringbuffer_init");
+    error = "ringbuffer_init";
+    goto error;
   }
 
-  send_demand(env, demand_handler, UNIFEX_NO_FLAGS,
-              ringbuffer_size * FRAME_SIZE);
+  send_portaudio_demand(env, demand_handler, UNIFEX_NO_FLAGS,
+                        ringbuffer_size * FRAME_SIZE);
 
-  SinkState *state = unifex_alloc_state(env);
+  state = unifex_alloc_state(env);
   state->is_content_destroyed = 0;
   state->ringbuffer = ringbuffer;
   state->demand_handler = demand_handler;
   state->stream = NULL;
   state->demand = 0;
 
-  char *error = init_pa(env, MEMBRANE_LOG_TAG,
-                        1, // direction
-                        &(state->stream), state,
-                        paInt16, // sample format #FIXME hardcoded0
-                        48000,   // sample rate #FIXME hardcoded
-                        2,       // channels #FIXME hardcoded
-                        latency, pa_buffer_size, endpoint_id, callback);
+  error = init_pa(env, MEMBRANE_LOG_TAG,
+                  1, // direction
+                  &(state->stream), state,
+                  paInt16, // sample format #TODO hardcoded
+                  48000,   // sample rate #TODO hardcoded
+                  2,       // channels #TODO hardcoded
+                  latency, pa_buffer_size, endpoint_id, callback);
 
   if (error) {
-    unifex_release_state(env, state);
-    return create_result_error(env, error);
+    goto error;
   }
 
-  UNIFEX_TERM res = create_result_ok(env, state);
-  unifex_release_state(env, state);
+error:
+
+  res = error ? create_result_error(env, error) : create_result_ok(env, state);
+
+  if (state) {
+    unifex_release_state(env, state);
+  }
+
   return res;
 }
 

@@ -5,6 +5,7 @@ defmodule Membrane.Element.PortAudio.SyncExecutor do
   Some PortAudio operations (such as starting and stopping stream) must not be
   executed concurrently, so they are received and executed here, synchronously.
   """
+  import Mockery.Macro
   use GenServer
 
   def start_link(args) do
@@ -36,6 +37,6 @@ defmodule Membrane.Element.PortAudio.SyncExecutor do
   end
 
   defp handle_apply({module, fun_name, args}) when is_atom(module) and is_atom(fun_name) do
-    Kernel.apply(module, fun_name, args |> Bunch.listify())
+    Kernel.apply(mockable(module), fun_name, args |> Bunch.listify())
   end
 end

@@ -15,4 +15,4 @@ spec write_data(payload, state) :: (:ok :: label) | {:error :: label, :overrun :
 spec destroy(state) :: :ok
 
 sends {Native, :destroy :: label, state}
-sends {:demand :: label, size :: int}
+sends {:portaudio_demand :: label, size :: int}

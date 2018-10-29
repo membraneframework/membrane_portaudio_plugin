@@ -80,7 +80,7 @@ defmodule Membrane.Element.Portaudio.SinkTest do
 
     test "after starting initial demand of size of ringbuffer should be received", %{state: state} do
       assert {:ok, state} = @module.handle_prepared_to_playing(nil, state)
-      assert_receive({:demand, initial_demand_size}, 1000)
+      assert_receive({:portaudio_demand, initial_demand_size}, 1000)
       assert initial_demand_size == 4 * state.ringbuffer_size
       assert {:ok, _state} = @module.handle_playing_to_prepared(nil, state)
     end

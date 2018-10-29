@@ -68,7 +68,7 @@ defmodule Membrane.Element.Portaudio.SourceTest do
 
     test "after starting some buffers should be received", %{state: state} do
       assert {{:ok, [_actions]}, state} = @module.handle_prepared_to_playing(nil, state)
-      assert_receive({:payload, _payload}, 1000)
+      assert_receive({:portaudio_payload, _payload}, 1000)
       assert {:ok, _state} = @module.handle_playing_to_prepared(nil, state)
     end
   end

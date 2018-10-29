@@ -2,7 +2,7 @@
 #define MEMBRANE_LOG_TAG UNIFEX_MODULE
 #include <membrane/log.h>
 
-#define FRAME_SIZE 4 // FIXME hardcoded format, stereo frame, 16bit
+#define FRAME_SIZE 4 // TODO hardcoded format, stereo frame, 16bit
 
 void handle_destroy_state(UnifexEnv *env, SourceState *state) {
   if (state->is_content_destroyed)
@@ -32,7 +32,8 @@ static int callback(const void *input_buffer, void *_output_buffer,
   UnifexPayload *payload =
       unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, frames * FRAME_SIZE);
   memcpy(payload->data, input_buffer, payload->size);
-  if (!send_payload(env, state->destination, UNIFEX_SEND_THREADED, payload)) {
+  if (!send_portaudio_payload(env, state->destination, UNIFEX_SEND_THREADED,
+                              payload)) {
     MEMBRANE_THREADED_WARN(env, "Payload send failed");
   }
   unifex_payload_release(payload);
@@ -54,17 +55,13 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
   char *error = init_pa(env, MEMBRANE_LOG_TAG,
                         0, // direction
                         &(state->stream), state,
-                        paInt16, // sample format #FIXME hardcoded
-                        48000,   // sample rate #FIXME hardcoded
-                        2,       // channels #FIXME hardcoded
+                        paInt16, // sample format #TODO hardcoded
+                        48000,   // sample rate #TODO hardcoded
+                        2,       // channels #TODO hardcoded
                         latency, pa_buffer_size, endpoint_id, callback);
 
-  if (error) {
-    unifex_release_state(env, state);
-    return create_result_error(env, error);
-  }
-
-  UNIFEX_TERM res = create_result_ok(env, state);
+  UNIFEX_TERM res =
+      error ? create_result_error(env, error) : create_result_ok(env, state);
   unifex_release_state(env, state);
   return res;
 }

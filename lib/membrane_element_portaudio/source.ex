@@ -72,12 +72,12 @@ defmodule Membrane.Element.PortAudio.Source do
   end
 
   @impl true
-  def handle_other({:payload, payload}, %{playback_state: :playing}, state) do
+  def handle_other({:portaudio_payload, payload}, %{playback_state: :playing}, state) do
     {{:ok, buffer: {:output, %Buffer{payload: payload}}}, state}
   end
 
   @impl true
-  def handle_other({:payload, _payload}, _ctx, state) do
+  def handle_other({:portaudio_payload, _payload}, _ctx, state) do
     {:ok, state}
   end
 end

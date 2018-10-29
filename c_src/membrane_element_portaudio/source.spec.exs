@@ -12,4 +12,4 @@ spec create(
 spec destroy(state) :: :ok
 
 sends {Native, :destroy :: label, state}
-sends {:payload :: label, payload}
+sends {:portaudio_payload :: label, payload}
