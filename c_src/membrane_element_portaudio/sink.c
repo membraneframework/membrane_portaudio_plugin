@@ -1,5 +1,5 @@
 #include "sink.h"
-#define MEMBRANE_LOG_TAG "Membrane.Element.PortAudio.Sink.Native"
+#define MEMBRANE_LOG_TAG UNIFEX_MODULE
 #include <membrane/log.h>
 
 #define FRAME_SIZE 4 // FIXME hardcoded format, stereo frame, 16bit
