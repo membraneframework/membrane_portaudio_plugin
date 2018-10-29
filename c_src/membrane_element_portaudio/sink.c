@@ -94,7 +94,7 @@ UNIFEX_TERM write_data(UnifexEnv* env, UnifexPayload* payload, SinkState* state)
   return write_data_result_ok(env);
 }
 
-UNIFEX_TERM destroy(ErlNifEnv* env, SinkState* state) {
+UNIFEX_TERM destroy(UnifexEnv* env, SinkState* state) {
   destroy_pa(env, MEMBRANE_LOG_TAG, state->stream);
   state->stream = NULL;
 

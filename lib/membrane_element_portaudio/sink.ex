@@ -65,17 +65,13 @@ defmodule Membrane.Element.PortAudio.Sink do
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
     with {:ok, native} <-
-           SyncExecutor
-           |> GenServer.call(
-             {Native, :create,
-              [
-                self(),
-                endpoint_id,
-                ringbuffer_size,
-                pa_buffer_size,
-                latency
-              ]}
-           ) do
+           SyncExecutor.apply(Native, :create, [
+             self(),
+             endpoint_id,
+             ringbuffer_size,
+             pa_buffer_size,
+             latency
+           ]) do
       {:ok, %{state | native: native}}
     else
       {:error, reason} -> {{:error, reason}, state}
@@ -84,7 +80,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   @impl true
   def handle_playing_to_prepared(_ctx, %{native: native} = state) do
-    {SyncExecutor |> GenServer.call({Native, :destroy, native}), %{state | native: nil}}
+    {SyncExecutor.apply(Native, :destroy, native), %{state | native: nil}}
   end
 
   @impl true

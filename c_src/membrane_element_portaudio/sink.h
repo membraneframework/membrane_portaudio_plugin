@@ -13,7 +13,7 @@ typedef struct _SinkState
   int is_content_destroyed;
   PaStream* stream;
   MembraneRingBuffer* ringbuffer;
-  ErlNifPid demand_handler; // Where to send demands
+  UnifexPid demand_handler; // Where to send demands
   int demand;
 } SinkState;
 
