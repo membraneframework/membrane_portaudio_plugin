@@ -6,14 +6,14 @@ This package provides [Membrane Multimedia Framework](https://membraneframework.
 elements that can be used to capture and play sound
 using multiplatform PortAudio library.
 
-Documentation is available at [HexDocs](https://hexdocs.pm/membrane_element_portaudio/)
+Documentation is available at [HexDocs](https://hexdocs.pm/membrane_element_portaudio/).
 
 ## Installation
 
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_element_portaudio, "~> 0.1"}
+{:membrane_element_portaudio, "~> 0.2.0"}
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
@@ -35,7 +35,7 @@ defmodule Membrane.ReleaseTest.Pipeline do
       pa_sink: PortAudio.Sink
     ]
     links = %{
-      {:file_src, :source} => {:pa_sink, :sink}
+      {:file_src, :output} => {:pa_sink, :input}
     }
 
     {{:ok, %Spec{children: children, links: links}}, %{}}
@@ -58,7 +58,7 @@ defmodule Membrane.ReleaseTest.Pipeline do
       pa_sink: PortAudio.Sink
     ]
     links = %{
-      {:pa_src, :source} => {:pa_sink, :sink, pull_buffer: [toilet: true]}
+      {:pa_src, :output} => {:pa_sink, :input, pull_buffer: [toilet: true]}
     }
 
     {{:ok, %Spec{children: children, links: links}}, %{}}
@@ -72,3 +72,12 @@ Tests contain some cases that use portaudio stuff instead of mocking. Such cases
 ```
 mix test --include soundcard
 ```
+
+## Copyright and License
+
+Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+
+[![Software Mansion](https://membraneframework.github.io/static/logo/swm_logo_readme.png)](
+https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+
+Licensed under the [Apache License, Version 2.0](LICENSE)

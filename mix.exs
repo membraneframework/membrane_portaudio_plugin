@@ -2,7 +2,7 @@ defmodule Membrane.Element.PortAudio.Mixfile do
   use Mix.Project
 
   @github_url "https://github.com/membraneframework/membrane-element-portaudio"
-  @version "0.1.1"
+  @version "0.2.0"
 
   def project do
     [
@@ -29,12 +29,12 @@ defmodule Membrane.Element.PortAudio.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, github: "membraneframework/membrane-core"},
-      {:membrane_common_c, github: "membraneframework/membrane-common-c"},
-      {:bunch, github: "membraneframework/bunch", override: true},
-      {:unifex, github: "membraneframework/unifex"},
-      {:membrane_caps_audio_raw, github: "membraneframework/membrane-caps-audio-raw"},
-      {:bundlex, "~> 0.1.0"},
+      {:membrane_core, "~> 0.2.0"},
+      {:membrane_common_c, "~> 0.2.0"},
+      {:bunch, "~> 0.1.2"},
+      {:unifex, "~> 0.1.0"},
+      {:membrane_caps_audio_raw, "~> 0.1.3"},
+      {:bundlex, "~> 0.1.3"},
       {:mockery, "~> 2.1", runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
