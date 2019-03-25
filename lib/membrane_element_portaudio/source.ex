@@ -12,10 +12,9 @@ defmodule Membrane.Element.PortAudio.Source do
   @pa_no_device -1
 
   # FIXME hardcoded caps
-  def_output_pads output: [
-                    mode: :push,
-                    caps: {Caps, channels: 2, sample_rate: 48_000, format: :s16le}
-                  ]
+  def_output_pad :output,
+    mode: :push,
+    caps: {Caps, channels: 2, sample_rate: 48_000, format: :s16le}
 
   def_options endpoint_id: [
                 type: :integer,
