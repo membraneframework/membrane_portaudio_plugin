@@ -11,8 +11,9 @@ void handle_destroy_state(UnifexEnv *env, SourceState *state) {
   memcpy(temp_state, state, sizeof(SourceState));
 
   UnifexPid exec_pid;
-  if (!unifex_get_pid_by_name(
-          env, "Elixir.Membrane.Element.PortAudio.SyncExecutor", 0, &exec_pid) ||
+  if (!unifex_get_pid_by_name(env,
+                              "Elixir.Membrane.Element.PortAudio.SyncExecutor",
+                              0, &exec_pid) ||
       !send_destroy(env, exec_pid, 0, temp_state)) {
     MEMBRANE_WARN(env, "Failed to destroy state");
   }
@@ -52,13 +53,15 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
   state->destination = destination;
   state->stream = NULL;
 
-  char *error = init_pa(env, MEMBRANE_LOG_TAG,
-                        0, // direction
-                        &(state->stream), state,
-                        paInt16, // sample format #TODO hardcoded
-                        48000,   // sample rate #TODO hardcoded
-                        2,       // channels #TODO hardcoded
-                        latency, pa_buffer_size, endpoint_id, callback);
+  int _latency_ms;
+  char *error =
+      init_pa(env, MEMBRANE_LOG_TAG,
+              0, // direction
+              &(state->stream), state,
+              paInt16, // sample format #TODO hardcoded
+              48000,   // sample rate #TODO hardcoded
+              2,       // channels #TODO hardcoded
+              latency, &_latency_ms, pa_buffer_size, endpoint_id, callback);
 
   UNIFEX_TERM res =
       error ? create_result_error(env, error) : create_result_ok(env, state);

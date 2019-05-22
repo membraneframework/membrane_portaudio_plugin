@@ -11,8 +11,9 @@ void handle_destroy_state(UnifexEnv *env, SinkState *state) {
   memcpy(temp_state, state, sizeof(SinkState));
 
   UnifexPid exec_pid;
-  if (!unifex_get_pid_by_name(
-          env, "Elixir.Membrane.Element.PortAudio.SyncExecutor", 0, &exec_pid) ||
+  if (!unifex_get_pid_by_name(env,
+                              "Elixir.Membrane.Element.PortAudio.SyncExecutor",
+                              0, &exec_pid) ||
       !send_destroy(env, exec_pid, 0, temp_state)) {
     MEMBRANE_WARN(env, "PortAudio sink: failed to destroy state");
   }
@@ -28,6 +29,11 @@ static int callback(const void *_input_buffer, void *output_buffer,
 
   UnifexEnv *env = unifex_alloc_env();
   SinkState *state = (SinkState *)user_data;
+
+  if (++state->ticks % 100 == 0) {
+    send_membrane_clock_update(env, state->clock, UNIFEX_SEND_THREADED,
+                               100 * frames_per_buffer, 48);
+  }
 
   size_t elements_available =
       membrane_ringbuffer_get_read_available(state->ringbuffer);
@@ -51,12 +57,14 @@ static int callback(const void *_input_buffer, void *output_buffer,
   return paContinue;
 }
 
-UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, int endpoint_id,
-                   int ringbuffer_size, int pa_buffer_size, char *latency) {
+UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, UnifexPid clock,
+                   int endpoint_id, int ringbuffer_size, int pa_buffer_size,
+                   char *latency) {
   MEMBRANE_DEBUG(env, "initializing");
 
   char *error;
   SinkState *state = NULL;
+  int latency_ms;
   UNIFEX_TERM res;
 
   MembraneRingBuffer *ringbuffer =
@@ -74,8 +82,10 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, int endpoint_id,
   state->is_content_destroyed = 0;
   state->ringbuffer = ringbuffer;
   state->demand_handler = demand_handler;
+  state->clock = clock;
   state->stream = NULL;
   state->demand = 0;
+  state->ticks = 0;
 
   error = init_pa(env, MEMBRANE_LOG_TAG,
                   1, // direction
@@ -83,7 +93,7 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, int endpoint_id,
                   paInt16, // sample format #TODO hardcoded
                   48000,   // sample rate #TODO hardcoded
                   2,       // channels #TODO hardcoded
-                  latency, pa_buffer_size, endpoint_id, callback);
+                  latency, &latency_ms, pa_buffer_size, endpoint_id, callback);
 
   if (error) {
     goto error;
@@ -91,7 +101,8 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, int endpoint_id,
 
 error:
 
-  res = error ? create_result_error(env, error) : create_result_ok(env, state);
+  res = error ? create_result_error(env, error)
+              : create_result_ok(env, latency_ms, state);
 
   if (state) {
     unifex_release_state(env, state);

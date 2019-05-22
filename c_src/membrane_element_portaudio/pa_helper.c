@@ -4,8 +4,9 @@
 
 char *init_pa(UnifexEnv *env, char *log_tag, char direction, PaStream **stream,
               void *state, PaSampleFormat sample_format, int sample_rate,
-              int channels, char *latency_str, int pa_buffer_size,
-              PaDeviceIndex endpoint_id, PaStreamCallback *callback) {
+              int channels, char *latency_str, int *latency_ms,
+              int pa_buffer_size, PaDeviceIndex endpoint_id,
+              PaStreamCallback *callback) {
   char *ret_error = NULL;
   PaError pa_error;
 
@@ -39,6 +40,7 @@ char *init_pa(UnifexEnv *env, char *log_tag, char direction, PaStream **stream,
     ret_error = "invalid_latency";
     goto error;
   }
+  *latency_ms = (int)(latency * 1000);
 
   PaStreamParameters stream_params = {.device = endpoint_id,
                                       .channelCount = channels,
