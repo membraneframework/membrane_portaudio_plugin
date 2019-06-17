@@ -6,8 +6,6 @@ defmodule Membrane.Element.PortAudio.Sink do
   alias Membrane.Buffer
   alias Membrane.Caps.Audio.Raw, as: Caps
   alias Membrane.Element.PortAudio.SyncExecutor
-  alias Membrane.Event.StartOfStream
-  alias Membrane.Sync
   alias Membrane.Time
   alias __MODULE__.Native
   import Mockery.Macro
@@ -44,29 +42,51 @@ defmodule Membrane.Element.PortAudio.Sink do
                 default: :high,
                 description: "Latency of the output device"
               ],
-              sync: [],
               clock: []
 
   @impl true
   def handle_init(%__MODULE__{} = options) do
-    :ok = Sync.register(options.sync)
-
     {:ok,
      options
      |> Map.from_struct()
      |> Map.merge(%{
-       native: nil
+       native: nil,
+       latency_time: 0
      })}
   end
 
   @impl true
-  def handle_event(:input, %StartOfStream{}, _ctx, state) do
-    {{:ok, sync: state.sync}, state}
+  def handle_prepared_to_playing(_ctx, state) do
+    %{
+      endpoint_id: endpoint_id,
+      ringbuffer_size: ringbuffer_size,
+      portaudio_buffer_size: pa_buffer_size,
+      latency: latency
+    } = state
+
+    endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
+
+    with {:ok, {latency_ms, native}} <-
+           SyncExecutor.apply(Native, :create, [
+             self(),
+             state.clock,
+             endpoint_id,
+             ringbuffer_size,
+             pa_buffer_size,
+             latency
+           ]) do
+      {:ok, %{state | latency_time: latency_ms |> Time.milliseconds(), native: native}}
+    else
+      {:error, reason} -> {{:error, reason}, state}
+    end
   end
 
   @impl true
-  def handle_event(pad, event, ctx, state) do
-    super(pad, event, ctx, state)
+  def handle_caps(:input, caps, _ctx, state) do
+    latency =
+      state.latency_time + Caps.frames_to_time((1.5 * state.portaudio_buffer_size) |> trunc, caps)
+
+    {{:ok, latency: latency}, state}
   end
 
   @impl true
@@ -89,40 +109,13 @@ defmodule Membrane.Element.PortAudio.Sink do
     {:ok, state}
   end
 
-  def handle_sync(sync, ctx, %{sync: sync} = state) do
-    IO.inspect(:portaudio_sync)
-
-    %{
-      endpoint_id: endpoint_id,
-      ringbuffer_size: ringbuffer_size,
-      portaudio_buffer_size: pa_buffer_size,
-      latency: latency
-    } = state
-
-    endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
-
-    with {:ok, {latency_ms, native}} <-
-           SyncExecutor.apply(Native, :create, [
-             self(),
-             state.clock,
-             endpoint_id,
-             ringbuffer_size,
-             pa_buffer_size,
-             latency
-           ]) do
-      delay =
-        Time.milliseconds(latency_ms) +
-          Caps.frames_to_time((1.5 * pa_buffer_size) |> trunc, ctx.pads.input.caps)
-
-      {{:ok, sync_delay: delay}, %{state | native: native}}
-    else
-      {:error, reason} -> {{:error, reason}, state}
-    end
-  end
-
-  def handle_synced(_sync, _ctx, state) do
-    {:ok, state}
-  end
+  # def handle_sync(sync, ctx, %{sync: sync} = state) do
+  #
+  # end
+  #
+  # def handle_synced(_sync, _ctx, state) do
+  #   {:ok, state}
+  # end
 
   @impl true
   def handle_write(:input, %Buffer{payload: payload}, _ctx, %{native: native} = state) do
