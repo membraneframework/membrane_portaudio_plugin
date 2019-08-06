@@ -1,6 +1,6 @@
 # Membrane Multimedia Framework: PortAudio Element
 
-[![Build Status](https://travis-ci.com/membraneframework/membrane-element-portaudio.svg?branch=master)](https://travis-ci.com/membraneframework/membrane-element-portaudio)
+[![CircleCI](https://circleci.com/gh/membraneframework/membrane-element-portaudio.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-element-portaudio)
 
 This package provides [Membrane Multimedia Framework](https://membraneframework.org)
 elements that can be used to capture and play sound
