@@ -8,7 +8,7 @@ defmodule Membrane.Element.PortAudio.Sink do
   alias Membrane.Element.PortAudio.SyncExecutor
   alias __MODULE__.Native
   import Mockery.Macro
-  use Membrane.Element.Base.Sink
+  use Membrane.Sink
 
   @pa_no_device -1
 

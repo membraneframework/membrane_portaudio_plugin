@@ -29,7 +29,8 @@ defmodule Membrane.Element.PortAudio.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.3.0"},
+      {:membrane_core,
+       github: "membraneframework/membrane-core", branch: "master", override: true},
       {:membrane_common_c, "~> 0.2.2"},
       {:bunch, "~> 1.0"},
       {:unifex, "~> 0.2.0"},
