@@ -1,6 +1,6 @@
 # Membrane Multimedia Framework: PortAudio Element
 
-[![Build Status](https://travis-ci.com/membraneframework/membrane-element-portaudio.svg?branch=master)](https://travis-ci.com/membraneframework/membrane-element-portaudio)
+[![CircleCI](https://circleci.com/gh/membraneframework/membrane-element-portaudio.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-element-portaudio)
 
 This package provides [Membrane Multimedia Framework](https://membraneframework.org)
 elements that can be used to capture and play sound
@@ -58,7 +58,7 @@ defmodule Membrane.ReleaseTest.Pipeline do
       pa_sink: PortAudio.Sink
     ]
     links = %{
-      {:pa_src, :output} => {:pa_sink, :input, pull_buffer: [toilet: true]}
+      {:pa_src, :output} => {:pa_sink, :input}
     }
 
     {{:ok, %Spec{children: children, links: links}}, %{}}
@@ -75,9 +75,9 @@ mix test --include soundcard
 
 ## Copyright and License
 
-Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane-element-portaudio)
 
 [![Software Mansion](https://membraneframework.github.io/static/logo/swm_logo_readme.png)](
-https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane-element-portaudio)
 
 Licensed under the [Apache License, Version 2.0](LICENSE)
