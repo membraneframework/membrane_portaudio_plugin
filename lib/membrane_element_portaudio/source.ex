@@ -7,7 +7,8 @@ defmodule Membrane.Element.PortAudio.Source do
   alias Membrane.Caps.Audio.Raw, as: Caps
   alias Membrane.Element.PortAudio.SyncExecutor
   alias __MODULE__.Native
-  use Membrane.Element.Base.Source
+
+  use Membrane.Source
 
   @pa_no_device -1
 

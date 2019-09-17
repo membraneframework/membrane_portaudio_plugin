@@ -8,10 +8,17 @@ defmodule Membrane.Element.PortAudio.Sink do
   alias Membrane.Element.PortAudio.SyncExecutor
   alias Membrane.Time
   alias __MODULE__.Native
+
   import Mockery.Macro
-  use Membrane.Element.Base.Sink
+
+  use Membrane.Sink
 
   @pa_no_device -1
+
+  def_clock """
+  This clock measures time by counting a number of samples consumed by a PortAudio device
+  and allows to synchronize with the device.
+  """
 
   # FIXME hardcoded caps
   def_input_pad :input,
@@ -41,8 +48,7 @@ defmodule Membrane.Element.PortAudio.Sink do
                 spec: :low | :high,
                 default: :high,
                 description: "Latency of the output device"
-              ],
-              clock: []
+              ]
 
   @impl true
   def handle_init(%__MODULE__{} = options) do
@@ -56,7 +62,7 @@ defmodule Membrane.Element.PortAudio.Sink do
   end
 
   @impl true
-  def handle_prepared_to_playing(_ctx, state) do
+  def handle_prepared_to_playing(ctx, state) do
     %{
       endpoint_id: endpoint_id,
       ringbuffer_size: ringbuffer_size,
@@ -69,7 +75,7 @@ defmodule Membrane.Element.PortAudio.Sink do
     with {:ok, {latency_ms, native}} <-
            SyncExecutor.apply(Native, :create, [
              self(),
-             state.clock,
+             ctx.clock,
              endpoint_id,
              ringbuffer_size,
              pa_buffer_size,
@@ -108,14 +114,6 @@ defmodule Membrane.Element.PortAudio.Sink do
   def handle_other({:portaudio_demand, _size}, _ctx, state) do
     {:ok, state}
   end
-
-  # def handle_sync(sync, ctx, %{sync: sync} = state) do
-  #
-  # end
-  #
-  # def handle_synced(_sync, _ctx, state) do
-  #   {:ok, state}
-  # end
 
   @impl true
   def handle_write(:input, %Buffer{payload: payload}, _ctx, %{native: native} = state) do
