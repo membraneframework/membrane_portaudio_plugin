@@ -10,15 +10,18 @@ defmodule Membrane.Element.Portaudio.SinkTest do
   @module Sink
 
   def state(_ctx) do
-    state = %{
-      endpoint_id: :default,
-      ringbuffer_size: 4096,
-      portaudio_buffer_size: 256,
-      latency: :high,
-      native: nil
-    }
+    {:ok, state} =
+      @module.handle_init(%Sink{
+        endpoint_id: :default,
+        ringbuffer_size: 4096,
+        portaudio_buffer_size: 256,
+        latency: :high
+      })
 
-    %{state: state}
+    {:ok, clock} = Membrane.Clock.start_link()
+    ctx = %{clock: clock}
+
+    %{ctx: ctx, state: state}
   end
 
   def playing(%{state: state}) do
@@ -65,24 +68,27 @@ defmodule Membrane.Element.Portaudio.SinkTest do
   describe "soundcard_requiring_tests" do
     @describetag soundcard: true
 
-    test "multiple parallel restarts should not cause errors", %{state: state} do
+    test "multiple parallel restarts should not cause errors", %{ctx: ctx, state: state} do
       1..20
       |> Task.async_stream(
         fn _ ->
-          assert {:ok, state} = @module.handle_prepared_to_playing(nil, state)
+          assert {:ok, state} = @module.handle_prepared_to_playing(ctx, state)
           :timer.sleep(10..200 |> Enum.random())
-          assert {:ok, _state} = @module.handle_playing_to_prepared(nil, state)
+          assert {:ok, _state} = @module.handle_playing_to_prepared(ctx, state)
         end,
         max_concurrency: 4
       )
       |> Stream.run()
     end
 
-    test "after starting initial demand of size of ringbuffer should be received", %{state: state} do
-      assert {:ok, state} = @module.handle_prepared_to_playing(nil, state)
+    test "after starting initial demand of size of ringbuffer should be received", %{
+      ctx: ctx,
+      state: state
+    } do
+      assert {:ok, state} = @module.handle_prepared_to_playing(ctx, state)
       assert_receive({:portaudio_demand, initial_demand_size}, 1000)
       assert initial_demand_size == 4 * state.ringbuffer_size
-      assert {:ok, _state} = @module.handle_playing_to_prepared(nil, state)
+      assert {:ok, _state} = @module.handle_playing_to_prepared(ctx, state)
     end
   end
 end
