@@ -44,6 +44,9 @@ defmodule Membrane.Element.PortAudio.Mixfile do
     [
       main: "readme",
       extras: ["README.md"],
+      nest_modules_by_prefix: [
+        Membrane.Element.PortAudio
+      ],
       source_ref: "v#{@version}"
     ]
   end
