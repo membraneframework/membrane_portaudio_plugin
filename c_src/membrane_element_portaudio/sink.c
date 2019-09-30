@@ -3,6 +3,11 @@
 #include <membrane/log.h>
 
 #define FRAME_SIZE 4 // TODO hardcoded format, stereo frame, 16bit
+#define BUFFERS_PER_TICK 100
+
+#define SAMPLE_RATE 48000
+#define SAMPLE_RATE_PER_MS (SAMPLE_RATE / 100)
+#define CHANNELS_NUM 2
 
 void handle_destroy_state(UnifexEnv *env, SinkState *state) {
   if (state->is_content_destroyed)
@@ -30,9 +35,10 @@ static int callback(const void *_input_buffer, void *output_buffer,
   UnifexEnv *env = unifex_alloc_env();
   SinkState *state = (SinkState *)user_data;
 
-  if (++state->ticks % 100 == 0) {
-    send_membrane_clock_update(env, state->clock, UNIFEX_SEND_THREADED,
-                               100 * frames_per_buffer, 48);
+  if (++state->ticks % BUFFERS_PER_TICK == 0) {
+    send_membrane_clock_update(env, state->membrane_clock, UNIFEX_SEND_THREADED,
+                               BUFFERS_PER_TICK * frames_per_buffer,
+                               SAMPLE_RATE_PER_MS);
   }
 
   size_t elements_available =
@@ -57,9 +63,9 @@ static int callback(const void *_input_buffer, void *output_buffer,
   return paContinue;
 }
 
-UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, UnifexPid clock,
-                   int endpoint_id, int ringbuffer_size, int pa_buffer_size,
-                   char *latency) {
+UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
+                   UnifexPid membrane_clock, int endpoint_id,
+                   int ringbuffer_size, int pa_buffer_size, char *latency) {
   MEMBRANE_DEBUG(env, "initializing");
 
   char *error;
@@ -82,7 +88,7 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, UnifexPid clock,
   state->is_content_destroyed = 0;
   state->ringbuffer = ringbuffer;
   state->demand_handler = demand_handler;
-  state->clock = clock;
+  state->membrane_clock = membrane_clock;
   state->stream = NULL;
   state->demand = 0;
   state->ticks = 0;
@@ -90,9 +96,9 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler, UnifexPid clock,
   error = init_pa(env, MEMBRANE_LOG_TAG,
                   1, // direction
                   &(state->stream), state,
-                  paInt16, // sample format #TODO hardcoded
-                  48000,   // sample rate #TODO hardcoded
-                  2,       // channels #TODO hardcoded
+                  paInt16,      // sample format #TODO hardcoded
+                  SAMPLE_RATE,  // sample rate #TODO hardcoded
+                  CHANNELS_NUM, // channels #TODO hardcoded
                   latency, &latency_ms, pa_buffer_size, endpoint_id, callback);
 
   if (error) {

@@ -13,7 +13,7 @@ typedef struct _SinkState {
   PaStream *stream;
   MembraneRingBuffer *ringbuffer;
   UnifexPid demand_handler; // Where to send demands
-  UnifexPid clock;
+  UnifexPid membrane_clock;
   int demand;
   int ticks;
 } SinkState;
