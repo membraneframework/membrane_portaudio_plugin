@@ -94,7 +94,7 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
   state->ticks = 0;
 
   error = init_pa(env, MEMBRANE_LOG_TAG,
-                  1, // direction
+                  STREAM_DIRECTION_OUT,
                   &(state->stream), state,
                   paInt16,      // sample format #TODO hardcoded
                   SAMPLE_RATE,  // sample rate #TODO hardcoded

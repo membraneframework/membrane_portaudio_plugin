@@ -56,7 +56,7 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
   int _latency_ms;
   char *error =
       init_pa(env, MEMBRANE_LOG_TAG,
-              0, // direction
+              STREAM_DIRECTION_IN,
               &(state->stream), state,
               paInt16, // sample format #TODO hardcoded
               48000,   // sample rate #TODO hardcoded

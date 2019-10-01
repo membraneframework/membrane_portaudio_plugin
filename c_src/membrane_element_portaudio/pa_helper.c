@@ -2,7 +2,7 @@
 #define MEMBRANE_LOG_TAG log_tag
 #include <membrane/log.h>
 
-char *init_pa(UnifexEnv *env, char *log_tag, char direction, PaStream **stream,
+char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction, PaStream **stream,
               void *state, PaSampleFormat sample_format, int sample_rate,
               int channels, char *latency_str, int *latency_ms,
               int pa_buffer_size, PaDeviceIndex endpoint_id,
@@ -50,7 +50,7 @@ char *init_pa(UnifexEnv *env, char *log_tag, char direction, PaStream **stream,
 
   PaStreamParameters *input_stream_params_ptr = NULL;
   PaStreamParameters *output_stream_params_ptr = NULL;
-  if (direction)
+  if (direction == STREAM_DIRECTION_OUT)
     output_stream_params_ptr = &stream_params;
   else
     input_stream_params_ptr = &stream_params;
@@ -58,7 +58,7 @@ char *init_pa(UnifexEnv *env, char *log_tag, char direction, PaStream **stream,
   pa_error =
       Pa_OpenStream(stream, input_stream_params_ptr, output_stream_params_ptr,
                     sample_rate, pa_buffer_size,
-                    0, // PaStreamFlags
+                    paNoFlag,
                     callback,
                     state // passed to the callback
       );
