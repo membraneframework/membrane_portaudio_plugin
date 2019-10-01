@@ -2,9 +2,9 @@
 #define MEMBRANE_LOG_TAG log_tag
 #include <membrane/log.h>
 
-char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction, PaStream **stream,
-              void *state, PaSampleFormat sample_format, int sample_rate,
-              int channels, char *latency_str, int *latency_ms,
+char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
+              PaStream **stream, void *state, PaSampleFormat sample_format,
+              int sample_rate, int channels, char *latency_str, int *latency_ms,
               int pa_buffer_size, PaDeviceIndex endpoint_id,
               PaStreamCallback *callback) {
   char *ret_error = NULL;
@@ -56,9 +56,7 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction, PaStream
 
   pa_error =
       Pa_OpenStream(stream, input_stream_params_ptr, output_stream_params_ptr,
-                    sample_rate, pa_buffer_size,
-                    paNoFlag,
-                    callback,
+                    sample_rate, pa_buffer_size, paNoFlag, callback,
                     state // passed to the callback
       );
 
@@ -69,7 +67,7 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction, PaStream
     goto error;
   }
 
-  const PaStreamInfo * stream_info = Pa_GetStreamInfo(*stream);
+  const PaStreamInfo *stream_info = Pa_GetStreamInfo(*stream);
   PaTime latency_sec;
   if (direction == STREAM_DIRECTION_OUT) {
     latency_sec = stream_info->outputLatency;

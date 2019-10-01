@@ -54,14 +54,12 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
   state->stream = NULL;
 
   int _latency_ms;
-  char *error =
-      init_pa(env, MEMBRANE_LOG_TAG,
-              STREAM_DIRECTION_IN,
-              &(state->stream), state,
-              paInt16, // sample format #TODO hardcoded
-              48000,   // sample rate #TODO hardcoded
-              2,       // channels #TODO hardcoded
-              latency, &_latency_ms, pa_buffer_size, endpoint_id, callback);
+  char *error = init_pa(
+      env, MEMBRANE_LOG_TAG, STREAM_DIRECTION_IN, &(state->stream), state,
+      paInt16, // sample format #TODO hardcoded
+      48000,   // sample rate #TODO hardcoded
+      2,       // channels #TODO hardcoded
+      latency, &_latency_ms, pa_buffer_size, endpoint_id, callback);
 
   UNIFEX_TERM res =
       error ? create_result_error(env, error) : create_result_ok(env, state);
