@@ -40,7 +40,6 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction, PaStream
     ret_error = "invalid_latency";
     goto error;
   }
-  *latency_ms = (int)(latency * 1000);
 
   PaStreamParameters stream_params = {.device = endpoint_id,
                                       .channelCount = channels,
@@ -69,6 +68,16 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction, PaStream
     ret_error = "pa_open_stream";
     goto error;
   }
+
+  const PaStreamInfo * stream_info = Pa_GetStreamInfo(*stream);
+  PaTime latency_sec;
+  if (direction == STREAM_DIRECTION_OUT) {
+    latency_sec = stream_info->outputLatency;
+  } else {
+    latency_sec = stream_info->inputLatency;
+  }
+
+  *latency_ms = (int)(latency_sec * 1000);
 
   pa_error = Pa_StartStream(*stream);
   if (pa_error != paNoError) {
