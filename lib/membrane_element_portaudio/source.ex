@@ -3,12 +3,12 @@ defmodule Membrane.Element.PortAudio.Source do
   Audio source that captures sound via multi-platform PortAudio library.
   """
 
+  use Membrane.Source
+
   alias Membrane.Buffer
   alias Membrane.Caps.Audio.Raw, as: Caps
   alias Membrane.Element.PortAudio.SyncExecutor
   alias __MODULE__.Native
-
-  use Membrane.Source
 
   @pa_no_device -1
 

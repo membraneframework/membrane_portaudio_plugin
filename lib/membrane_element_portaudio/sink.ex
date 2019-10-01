@@ -3,15 +3,15 @@ defmodule Membrane.Element.PortAudio.Sink do
   Audio sink that plays sound via multi-platform PortAudio library.
   """
 
+  use Membrane.Sink
+
+  import Mockery.Macro
+
   alias Membrane.Buffer
   alias Membrane.Caps.Audio.Raw, as: Caps
   alias Membrane.Element.PortAudio.SyncExecutor
   alias Membrane.Time
   alias __MODULE__.Native
-
-  import Mockery.Macro
-
-  use Membrane.Sink
 
   @pa_no_device -1
 
