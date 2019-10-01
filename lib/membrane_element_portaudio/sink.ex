@@ -17,7 +17,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   def_clock """
   This clock measures time by counting a number of samples consumed by a PortAudio device
-  and allows synchronization with the device.
+  and allows synchronization with it.
   """
 
   # FIXME hardcoded caps

@@ -65,7 +65,7 @@ defmodule Membrane.Element.Portaudio.SinkTest do
     end
   end
 
-  describe "soundcard_requiring_tests" do
+  describe "Using soundcard," do
     @describetag soundcard: true
 
     test "multiple parallel restarts should not cause errors", %{ctx: ctx, state: state} do
@@ -81,7 +81,7 @@ defmodule Membrane.Element.Portaudio.SinkTest do
       |> Stream.run()
     end
 
-    test "after starting initial demand of size of ringbuffer should be received", %{
+    test "after starting, the initial demand of the size of the ringbuffer should be received", %{
       ctx: ctx,
       state: state
     } do
