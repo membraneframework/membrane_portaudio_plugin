@@ -88,14 +88,6 @@ defmodule Membrane.Element.PortAudio.Sink do
   end
 
   @impl true
-  def handle_caps(:input, caps, _ctx, state) do
-    latency =
-      state.latency_time + Caps.frames_to_time((1.5 * state.portaudio_buffer_size) |> trunc, caps)
-
-    {{:ok, latency: latency}, state}
-  end
-
-  @impl true
   def handle_playing_to_prepared(_ctx, %{native: nil} = state) do
     {:ok, state}
   end
