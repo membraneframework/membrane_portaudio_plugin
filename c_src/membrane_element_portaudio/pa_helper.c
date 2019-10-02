@@ -2,10 +2,11 @@
 #define MEMBRANE_LOG_TAG log_tag
 #include <membrane/log.h>
 
-char *init_pa(UnifexEnv *env, char *log_tag, char direction, PaStream **stream,
-              void *state, PaSampleFormat sample_format, int sample_rate,
-              int channels, char *latency_str, int pa_buffer_size,
-              PaDeviceIndex endpoint_id, PaStreamCallback *callback) {
+char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
+              PaStream **stream, void *state, PaSampleFormat sample_format,
+              int sample_rate, int channels, char *latency_str, int *latency_ms,
+              int pa_buffer_size, PaDeviceIndex endpoint_id,
+              PaStreamCallback *callback) {
   char *ret_error = NULL;
   PaError pa_error;
 
@@ -48,16 +49,14 @@ char *init_pa(UnifexEnv *env, char *log_tag, char direction, PaStream **stream,
 
   PaStreamParameters *input_stream_params_ptr = NULL;
   PaStreamParameters *output_stream_params_ptr = NULL;
-  if (direction)
+  if (direction == STREAM_DIRECTION_OUT)
     output_stream_params_ptr = &stream_params;
   else
     input_stream_params_ptr = &stream_params;
 
   pa_error =
       Pa_OpenStream(stream, input_stream_params_ptr, output_stream_params_ptr,
-                    sample_rate, pa_buffer_size,
-                    0, // PaStreamFlags
-                    callback,
+                    sample_rate, pa_buffer_size, paNoFlag, callback,
                     state // passed to the callback
       );
 
@@ -67,6 +66,16 @@ char *init_pa(UnifexEnv *env, char *log_tag, char direction, PaStream **stream,
     ret_error = "pa_open_stream";
     goto error;
   }
+
+  const PaStreamInfo *stream_info = Pa_GetStreamInfo(*stream);
+  PaTime latency_sec;
+  if (direction == STREAM_DIRECTION_OUT) {
+    latency_sec = stream_info->outputLatency;
+  } else {
+    latency_sec = stream_info->inputLatency;
+  }
+
+  *latency_ms = (int)(latency_sec * 1000);
 
   pa_error = Pa_StartStream(*stream);
   if (pa_error != paNoError) {

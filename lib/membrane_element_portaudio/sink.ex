@@ -3,14 +3,22 @@ defmodule Membrane.Element.PortAudio.Sink do
   Audio sink that plays sound via multi-platform PortAudio library.
   """
 
+  use Membrane.Sink
+
+  import Mockery.Macro
+
   alias Membrane.Buffer
   alias Membrane.Caps.Audio.Raw, as: Caps
   alias Membrane.Element.PortAudio.SyncExecutor
+  alias Membrane.Time
   alias __MODULE__.Native
-  import Mockery.Macro
-  use Membrane.Sink
 
   @pa_no_device -1
+
+  def_clock """
+  This clock measures time by counting a number of samples consumed by a PortAudio device
+  and allows synchronization with it.
+  """
 
   # FIXME hardcoded caps
   def_input_pad :input,
@@ -48,12 +56,13 @@ defmodule Membrane.Element.PortAudio.Sink do
      options
      |> Map.from_struct()
      |> Map.merge(%{
-       native: nil
+       native: nil,
+       latency_time: 0
      })}
   end
 
   @impl true
-  def handle_prepared_to_playing(_ctx, state) do
+  def handle_prepared_to_playing(ctx, state) do
     %{
       endpoint_id: endpoint_id,
       ringbuffer_size: ringbuffer_size,
@@ -63,18 +72,24 @@ defmodule Membrane.Element.PortAudio.Sink do
 
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
-    with {:ok, native} <-
+    with {:ok, {latency_ms, native}} <-
            SyncExecutor.apply(Native, :create, [
              self(),
+             ctx.clock,
              endpoint_id,
              ringbuffer_size,
              pa_buffer_size,
              latency
            ]) do
-      {:ok, %{state | native: native}}
+      {:ok, %{state | latency_time: latency_ms |> Time.milliseconds(), native: native}}
     else
       {:error, reason} -> {{:error, reason}, state}
     end
+  end
+
+  @impl true
+  def handle_playing_to_prepared(_ctx, %{native: nil} = state) do
+    {:ok, state}
   end
 
   @impl true
