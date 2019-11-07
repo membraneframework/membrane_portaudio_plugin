@@ -8,11 +8,7 @@ jobs:
     working_directory: '~/app'
 
     steps:
-      - checkout  
-      - run: update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 100
-      - run: apt-get update -q
-      - run: apt-get install -qq portaudio19-dev
+      - checkout
       - run: mix deps.get
       - run: mix format --check-formatted
       - run: mix test
-
