@@ -6,7 +6,7 @@
 #define BUFFERS_PER_TICK 100
 
 #define SAMPLE_RATE 48000
-#define SAMPLE_RATE_PER_MS (SAMPLE_RATE / 100)
+#define SAMPLE_RATE_PER_MS (SAMPLE_RATE / 1000)
 #define CHANNELS_NUM 2
 
 void handle_destroy_state(UnifexEnv *env, SinkState *state) {
