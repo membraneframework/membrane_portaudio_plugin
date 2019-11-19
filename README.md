@@ -13,7 +13,7 @@ Documentation is available at [HexDocs](https://hexdocs.pm/membrane_element_port
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_element_portaudio, "~> 0.2.0"}
+{:membrane_element_portaudio, "~> 0.3.0"}
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
