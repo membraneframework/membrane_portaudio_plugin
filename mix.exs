@@ -2,7 +2,7 @@ defmodule Membrane.Element.PortAudio.Mixfile do
   use Mix.Project
 
   @github_url "https://github.com/membraneframework/membrane-element-portaudio"
-  @version "0.3.0"
+  @version "0.3.1"
 
   def project do
     [
