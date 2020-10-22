@@ -2,6 +2,8 @@ alias Membrane.PortAudio.Sink.Native
 
 module Native
 
+state_type "SinkState"
+
 spec create(
        demand_handler :: pid,
        clock :: pid,

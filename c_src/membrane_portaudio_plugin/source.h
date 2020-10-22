@@ -13,6 +13,4 @@ typedef struct _SourceState {
   UnifexPid destination; // Where capture thread will send messages
 } SourceState;
 
-typedef SourceState UnifexNifState;
-
 #include "_generated/source.h"
