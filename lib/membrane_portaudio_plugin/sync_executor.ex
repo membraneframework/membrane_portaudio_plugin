@@ -1,4 +1,4 @@
-defmodule Membrane.Element.PortAudio.SyncExecutor do
+defmodule Membrane.PortAudio.SyncExecutor do
   @moduledoc """
   A GenServer executing actions received by `GenServer.call/3` or `send/2`.
 

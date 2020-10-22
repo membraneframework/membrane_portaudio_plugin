@@ -1,4 +1,4 @@
-defmodule Membrane.Element.PortAudio.BundlexProject do
+defmodule Membrane.PortAudio.BundlexProject do
   use Bundlex.Project
 
   def project() do
