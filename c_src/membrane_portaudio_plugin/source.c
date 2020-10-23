@@ -12,7 +12,7 @@ void handle_destroy_state(UnifexEnv *env, SourceState *state) {
 
   UnifexPid exec_pid;
   if (!unifex_get_pid_by_name(env,
-                              "Elixir.Membrane.Element.PortAudio.SyncExecutor",
+                              "Elixir.Membrane.PortAudio.SyncExecutor",
                               0, &exec_pid) ||
       !send_destroy(env, exec_pid, 0, temp_state)) {
     MEMBRANE_WARN(env, "Failed to destroy state");

@@ -1,4 +1,4 @@
-alias Membrane.Element.PortAudio.Sink.Native
+alias Membrane.PortAudio.Sink.Native
 
 module Native
 

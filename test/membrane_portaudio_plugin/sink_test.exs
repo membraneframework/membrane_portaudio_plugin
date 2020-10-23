@@ -1,9 +1,9 @@
-defmodule Membrane.Element.Portaudio.SinkTest do
+defmodule Membrane.Portaudio.SinkTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
   use Mockery
-  alias Membrane.Element.PortAudio.Sink
+  alias Membrane.PortAudio.Sink
   alias Sink.Native
   alias Membrane.Buffer
 

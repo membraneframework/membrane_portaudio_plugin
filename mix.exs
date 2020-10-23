@@ -1,19 +1,19 @@
-defmodule Membrane.Element.PortAudio.Mixfile do
+defmodule Membrane.PortAudio.Mixfile do
   use Mix.Project
 
-  @github_url "https://github.com/membraneframework/membrane-element-portaudio"
+  @github_url "https://github.com/membraneframework/membrane_portaudio_plugin"
   @version "0.3.1"
 
   def project do
     [
-      app: :membrane_element_portaudio,
+      app: :membrane_portaudio_plugin,
       compilers: [:unifex, :bundlex] ++ Mix.compilers(),
       version: @version,
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
-      description: "Membrane Multimedia Framework (PortAudio Element)",
+      description: "Raw audio retriever and player based on PortAudio",
       package: package(),
-      name: "Membrane Element: PortAudio",
+      name: "Membrane PortAudio plugin",
       source_url: @github_url,
       docs: docs(),
       deps: deps()
@@ -21,7 +21,7 @@ defmodule Membrane.Element.PortAudio.Mixfile do
   end
 
   def application do
-    [extra_applications: [], mod: {Membrane.Element.PortAudio, []}]
+    [extra_applications: [], mod: {Membrane.PortAudio, []}]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -45,7 +45,7 @@ defmodule Membrane.Element.PortAudio.Mixfile do
       main: "readme",
       extras: ["README.md"],
       nest_modules_by_prefix: [
-        Membrane.Element.PortAudio
+        Membrane.PortAudio
       ],
       source_ref: "v#{@version}"
     ]

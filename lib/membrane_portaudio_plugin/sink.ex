@@ -1,4 +1,4 @@
-defmodule Membrane.Element.PortAudio.Sink do
+defmodule Membrane.PortAudio.Sink do
   @moduledoc """
   Audio sink that plays sound via multi-platform PortAudio library.
   """
@@ -9,7 +9,7 @@ defmodule Membrane.Element.PortAudio.Sink do
 
   alias Membrane.Buffer
   alias Membrane.Caps.Audio.Raw, as: Caps
-  alias Membrane.Element.PortAudio.SyncExecutor
+  alias Membrane.PortAudio.SyncExecutor
   alias Membrane.Time
   alias __MODULE__.Native
 

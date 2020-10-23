@@ -1,9 +1,9 @@
-defmodule Membrane.Element.Portaudio.SourceTest do
+defmodule Membrane.Portaudio.SourceTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
   use Mockery
-  alias Membrane.Element.PortAudio.{Source, Native}
+  alias Membrane.PortAudio.{Source, Native}
   alias Membrane.Caps.Audio.Raw, as: Caps
 
   @module Source

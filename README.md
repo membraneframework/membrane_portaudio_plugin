@@ -1,19 +1,17 @@
-# Membrane Multimedia Framework: PortAudio Element
+# Membrane PortAudio plugin
 
-[![CircleCI](https://circleci.com/gh/membraneframework/membrane-element-portaudio.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-element-portaudio)
+[![Hex.pm](https://img.shields.io/hexpm/v/membrane_portaudio_plugin.svg)](https://hex.pm/packages/membrane_portaudio_plugin)
+[![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](https://hexdocs.pm/membrane_portaudio_plugin/)
+[![CircleCI](https://circleci.com/gh/membraneframework/membrane_portaudio_plugin.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane_portaudio_plugin)
 
-This package provides [Membrane Multimedia Framework](https://membraneframework.org)
-elements that can be used to capture and play sound
-using multiplatform PortAudio library.
-
-Documentation is available at [HexDocs](https://hexdocs.pm/membrane_element_portaudio/).
+Plugin that can be used to capture and play sound using multiplatform PortAudio library.
 
 ## Installation
 
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_element_portaudio, "~> 0.3.1"}
+{:membrane_portaudio_plugin, "~> 0.3.1"}
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
@@ -26,7 +24,7 @@ Playing below pipeline should play a raw file to default output device.
 defmodule Membrane.ReleaseTest.Pipeline do
   use Membrane.Pipeline
   alias Pipeline.Spec
-  alias Membrane.Element.{PortAudio, File}
+  alias Membrane.{PortAudio, File}
 
   @impl true
   def handle_init(_) do
@@ -49,7 +47,7 @@ And this one should forward sound from default input to default output. DO NOT U
 defmodule Membrane.ReleaseTest.Pipeline do
   use Membrane.Pipeline
   alias Pipeline.Spec
-  alias Membrane.Element.PortAudio
+  alias Membrane.PortAudio
 
   @impl true
   def handle_init(_) do
@@ -75,9 +73,9 @@ mix test --include soundcard
 
 ## Copyright and License
 
-Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane-element-portaudio)
+Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane-portaudio-plugin)
 
 [![Software Mansion](https://logo.swmansion.com/logo?color=white&variant=desktop&width=200&tag=membrane-github)](
-https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane-element-portaudio)
+https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane-portaudio-plugin)
 
 Licensed under the [Apache License, Version 2.0](LICENSE)
