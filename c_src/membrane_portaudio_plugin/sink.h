@@ -18,6 +18,4 @@ typedef struct _SinkState {
   int ticks;
 } SinkState;
 
-typedef SinkState UnifexNifState;
-
 #include "_generated/sink.h"
