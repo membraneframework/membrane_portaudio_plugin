@@ -61,7 +61,7 @@ defmodule Membrane.ReleaseTest.Pipeline do
       |> to(:pa_sink)
     ]
 
-    {{:ok, %ParentSpec{children: children, links: links}}, %{}}
+    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
   end
 end
 ```
