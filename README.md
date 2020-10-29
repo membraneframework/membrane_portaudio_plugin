@@ -11,7 +11,7 @@ Plugin that can be used to capture and play sound using multiplatform PortAudio 
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_portaudio_plugin, "~> 0.3.1"}
+{:membrane_portaudio_plugin, "~> 0.4.0"}
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
@@ -23,20 +23,21 @@ Playing below pipeline should play a raw file to default output device.
 ```elixir
 defmodule Membrane.ReleaseTest.Pipeline do
   use Membrane.Pipeline
-  alias Pipeline.Spec
-  alias Membrane.{PortAudio, File}
+
+  alias Membrane.PortAudio
 
   @impl true
   def handle_init(_) do
     children = [
-      file_src: %File.Source{location: "file.raw"},
+      file_src: %Membrane.Element.File.Source{location: "file.raw"},
       pa_sink: PortAudio.Sink
     ]
-    links = %{
-      {:file_src, :output} => {:pa_sink, :input}
-    }
+    links = [
+      link(:file_src)
+      |> to(:pa_sink)
+    ]
 
-    {{:ok, %Spec{children: children, links: links}}, %{}}
+    {{:ok, %ParentSpec{children: children, links: links}}, %{}}
   end
 end
 ```
@@ -46,7 +47,7 @@ And this one should forward sound from default input to default output. DO NOT U
 ```elixir
 defmodule Membrane.ReleaseTest.Pipeline do
   use Membrane.Pipeline
-  alias Pipeline.Spec
+
   alias Membrane.PortAudio
 
   @impl true
@@ -55,11 +56,12 @@ defmodule Membrane.ReleaseTest.Pipeline do
       pa_src: PortAudio.Source,
       pa_sink: PortAudio.Sink
     ]
-    links = %{
-      {:pa_src, :output} => {:pa_sink, :input}
-    }
+    links = [
+      link(:pa_src)
+      |> to(:pa_sink)
+    ]
 
-    {{:ok, %Spec{children: children, links: links}}, %{}}
+    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
   end
 end
 ```
