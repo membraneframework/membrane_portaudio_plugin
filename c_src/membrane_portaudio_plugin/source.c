@@ -1,5 +1,5 @@
 #include "source.h"
-#define MEMBRANE_LOG_TAG UNIFEX_MODULE
+#define MEMBRANE_LOG_TAG "Membrane.PortAudio.Sink"
 #include <membrane/log.h>
 
 #define FRAME_SIZE 4 // TODO hardcoded format, stereo frame, 16bit
@@ -11,9 +11,8 @@ void handle_destroy_state(UnifexEnv *env, SourceState *state) {
   memcpy(temp_state, state, sizeof(SourceState));
 
   UnifexPid exec_pid;
-  if (!unifex_get_pid_by_name(env,
-                              "Elixir.Membrane.PortAudio.SyncExecutor",
-                              0, &exec_pid) ||
+  if (!unifex_get_pid_by_name(env, "Elixir.Membrane.PortAudio.SyncExecutor", 0,
+                              &exec_pid) ||
       !send_destroy(env, exec_pid, 0, temp_state)) {
     MEMBRANE_WARN(env, "Failed to destroy state");
   }
