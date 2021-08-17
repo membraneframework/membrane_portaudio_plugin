@@ -31,7 +31,7 @@ static int callback(const void *_input_buffer, void *output_buffer,
   UNIFEX_UNUSED(_time_info);
   UNIFEX_UNUSED(_flags);
 
-  UnifexEnv *env = unifex_alloc_env();
+  UnifexEnv *env = unifex_alloc_env(NULL);
   SinkState *state = (SinkState *)user_data;
 
   if (++state->ticks % BUFFERS_PER_TICK == 0) {

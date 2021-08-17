@@ -27,7 +27,7 @@ static int callback(const void *input_buffer, void *_output_buffer,
   UNIFEX_UNUSED(_flags);
 
   SourceState *state = (SourceState *)user_data;
-  UnifexEnv *env = unifex_alloc_env();
+  UnifexEnv *env = unifex_alloc_env(NULL);
 
   UnifexPayload *payload =
       unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, frames * FRAME_SIZE);
