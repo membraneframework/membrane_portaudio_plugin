@@ -2,14 +2,14 @@ defmodule Membrane.PortAudio.Mixfile do
   use Mix.Project
 
   @github_url "https://github.com/membraneframework/membrane_portaudio_plugin"
-  @version "0.8.0"
+  @version "0.9.0"
 
   def project do
     [
       app: :membrane_portaudio_plugin,
       compilers: [:unifex, :bundlex] ++ Mix.compilers(),
       version: @version,
-      elixir: "~> 1.10",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       description: "Raw audio retriever and player based on PortAudio",
       package: package(),
