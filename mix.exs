@@ -35,8 +35,12 @@ defmodule Membrane.PortAudio.Mixfile do
       {:unifex, "~> 0.7.0"},
       {:membrane_caps_audio_raw, "~> 0.4.0"},
       {:bundlex, "~> 0.5.0"},
+      # Testing
       {:mockery, "~> 2.1", runtime: false},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
+      # Development
+      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
+      {:credo, "~> 1.4", only: :dev, runtime: false}
     ]
   end
 

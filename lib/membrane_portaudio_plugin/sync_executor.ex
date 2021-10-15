@@ -15,7 +15,7 @@ defmodule Membrane.PortAudio.SyncExecutor do
   @doc """
   A simple wrapper around `GenServer.call/3.`
   """
-  @spec apply(module, atom, list | any, GenServer.timeout_t()) :: term
+  @spec apply(module, atom, list | any, timeout()) :: term
   def apply(module, fun_name, args, timeout \\ 5000) do
     GenServer.call(__MODULE__, {module, fun_name, args}, timeout)
   end
