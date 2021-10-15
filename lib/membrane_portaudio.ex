@@ -2,6 +2,7 @@ defmodule Membrane.PortAudio do
   @moduledoc false
   use Application
 
+  @impl true
   def start(_type, _args) do
     children = [__MODULE__.SyncExecutor]
 

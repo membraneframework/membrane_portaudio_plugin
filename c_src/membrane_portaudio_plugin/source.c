@@ -29,14 +29,14 @@ static int callback(const void *input_buffer, void *_output_buffer,
   SourceState *state = (SourceState *)user_data;
   UnifexEnv *env = unifex_alloc_env(NULL);
 
-  UnifexPayload *payload =
-      unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, frames * FRAME_SIZE);
-  memcpy(payload->data, input_buffer, payload->size);
+  UnifexPayload payload;
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, frames * FRAME_SIZE, &payload);
+  memcpy(payload.data, input_buffer, payload.size);
   if (!send_portaudio_payload(env, state->destination, UNIFEX_SEND_THREADED,
-                              payload)) {
+                              &payload)) {
     MEMBRANE_THREADED_WARN(env, "Payload send failed");
   }
-  unifex_payload_release(payload);
+  unifex_payload_release(&payload);
 
   unifex_free_env(env);
 

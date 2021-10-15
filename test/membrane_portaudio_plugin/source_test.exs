@@ -8,7 +8,7 @@ defmodule Membrane.Portaudio.SourceTest do
 
   @module Source
 
-  def state(_ctx) do
+  defp state(_ctx) do
     state = %{
       endpoint_id: :default,
       portaudio_buffer_size: 256,
@@ -19,7 +19,7 @@ defmodule Membrane.Portaudio.SourceTest do
     %{state: state}
   end
 
-  def playing(%{state: state}) do
+  defp playing(%{state: state}) do
     %{state: %{state | native: make_ref(), playing: true}}
   end
 
@@ -56,7 +56,7 @@ defmodule Membrane.Portaudio.SourceTest do
     test "multiple parallel restarts should not cause errors", %{state: state} do
       1..20
       |> Task.async_stream(
-        fn _ ->
+        fn _i ->
           assert {{:ok, [_actions]}, state} = @module.handle_prepared_to_playing(nil, state)
           :timer.sleep(10..200 |> Enum.random())
           assert {:ok, _state} = @module.handle_playing_to_prepared(nil, state)
