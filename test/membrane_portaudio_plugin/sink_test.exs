@@ -9,7 +9,7 @@ defmodule Membrane.Portaudio.SinkTest do
 
   @module Sink
 
-  def state(_ctx) do
+  defp state(_ctx) do
     {:ok, state} =
       @module.handle_init(%Sink{
         endpoint_id: :default,
@@ -24,7 +24,7 @@ defmodule Membrane.Portaudio.SinkTest do
     %{ctx: ctx, state: state}
   end
 
-  def playing(%{state: state}) do
+  defp playing(%{state: state}) do
     %{state: %{state | native: make_ref()}}
   end
 
@@ -71,7 +71,7 @@ defmodule Membrane.Portaudio.SinkTest do
     test "multiple parallel restarts should not cause errors", %{ctx: ctx, state: state} do
       1..20
       |> Task.async_stream(
-        fn _ ->
+        fn _i ->
           assert {:ok, state} = @module.handle_prepared_to_playing(ctx, state)
           :timer.sleep(10..200 |> Enum.random())
           assert {:ok, _state} = @module.handle_playing_to_prepared(ctx, state)

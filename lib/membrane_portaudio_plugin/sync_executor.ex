@@ -5,9 +5,11 @@ defmodule Membrane.PortAudio.SyncExecutor do
   Some PortAudio operations (such as starting and stopping stream) must not be
   executed concurrently, so they are received and executed here, synchronously.
   """
-  import Mockery.Macro
-  use GenServer
 
+  use GenServer
+  import Mockery.Macro
+
+  @spec start_link(any()) :: GenServer.on_start()
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
