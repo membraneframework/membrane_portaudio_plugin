@@ -30,9 +30,9 @@ defmodule Membrane.PortAudio.Mixfile do
   defp deps do
     [
       {:membrane_core, "~> 0.7.0"},
-      {:membrane_common_c, "~> 0.8.0"},
+      {:membrane_common_c, "~> 0.9.0"},
       {:bunch, "~> 1.3.0"},
-      {:unifex, "~> 0.6.0"},
+      {:unifex, "~> 0.7.0"},
       {:membrane_caps_audio_raw, "~> 0.4.0"},
       {:bundlex, "~> 0.5.0"},
       {:mockery, "~> 2.1", runtime: false},
