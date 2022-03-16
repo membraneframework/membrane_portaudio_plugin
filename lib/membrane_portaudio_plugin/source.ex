@@ -6,16 +6,16 @@ defmodule Membrane.PortAudio.Source do
   use Membrane.Source
 
   alias Membrane.Buffer
-  alias Membrane.Caps.Audio.Raw, as: Caps
+  alias Membrane.RawAudio
   alias Membrane.PortAudio.SyncExecutor
   alias __MODULE__.Native
 
   @pa_no_device -1
 
-  # FIXME hardcoded caps
+  # TODO hardcoded caps
   def_output_pad :output,
     mode: :push,
-    caps: {Caps, channels: 2, sample_rate: 48_000, format: :s16le}
+    caps: {RawAudio, channels: 2, sample_rate: 48_000, sample_format: :s16le}
 
   def_options endpoint_id: [
                 type: :integer,
@@ -58,8 +58,8 @@ defmodule Membrane.PortAudio.Source do
 
     with {:ok, native} <-
            SyncExecutor.apply(Native, :create, [self(), endpoint_id, pa_buffer_size, latency]) do
-      # FIXME hardcoded caps
-      {{:ok, caps: {:output, %Caps{channels: 2, sample_rate: 48_000, format: :s16le}}},
+      # TODO hardcoded caps
+      {{:ok, caps: {:output, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}},
        %{state | native: native}}
     else
       {:error, reason} -> {{:error, reason}, state}

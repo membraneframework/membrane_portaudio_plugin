@@ -8,7 +8,7 @@ defmodule Membrane.PortAudio.Sink do
   import Mockery.Macro
 
   alias Membrane.Buffer
-  alias Membrane.Caps.Audio.Raw, as: Caps
+  alias Membrane.RawAudio
   alias Membrane.PortAudio.SyncExecutor
   alias Membrane.Time
   alias __MODULE__.Native
@@ -20,10 +20,10 @@ defmodule Membrane.PortAudio.Sink do
   and allows synchronization with it.
   """
 
-  # FIXME hardcoded caps
+  # TODO hardcoded caps
   def_input_pad :input,
     demand_unit: :bytes,
-    caps: {Caps, channels: 2, sample_rate: 48_000, format: :s16le}
+    caps: {RawAudio, channels: 2, sample_rate: 48_000, sample_format: :s16le}
 
   def_options endpoint_id: [
                 type: :integer,
