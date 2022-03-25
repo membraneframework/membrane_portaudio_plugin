@@ -12,7 +12,7 @@ defmodule Membrane.PortAudio.Source do
 
   @pa_no_device -1
 
-  # TODO hardcoded caps
+  # TODO Add support for different formats
   def_output_pad :output,
     mode: :push,
     caps: {RawAudio, channels: 2, sample_rate: 48_000, sample_format: :s16le}
@@ -58,7 +58,7 @@ defmodule Membrane.PortAudio.Source do
 
     with {:ok, native} <-
            SyncExecutor.apply(Native, :create, [self(), endpoint_id, pa_buffer_size, latency]) do
-      # TODO hardcoded caps
+      # TODO Add support for different formats
       {{:ok, caps: {:output, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}},
        %{state | native: native}}
     else
