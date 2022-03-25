@@ -38,9 +38,9 @@ defmodule Membrane.PortAudio.Mixfile do
       # Testing
       {:mockery, "~> 2.1", runtime: false},
       # Development
-      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      {:credo, "~> 1.4", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
+      {:credo, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
@@ -51,14 +51,15 @@ defmodule Membrane.PortAudio.Mixfile do
       nest_modules_by_prefix: [
         Membrane.PortAudio
       ],
-      source_ref: "v#{@version}"
+      source_ref: "v#{@version}",
+      formatters: ["html"]
     ]
   end
 
   defp package do
     [
       maintainers: ["Membrane Team"],
-      licenses: ["Apache 2.0"],
+      licenses: ["Apache-2.0"],
       links: %{
         "GitHub" => @github_url,
         "Membrane Framework Homepage" => "https://membraneframework.org"

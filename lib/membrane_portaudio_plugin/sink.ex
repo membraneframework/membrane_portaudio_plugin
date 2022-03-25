@@ -20,9 +20,9 @@ defmodule Membrane.PortAudio.Sink do
   and allows synchronization with it.
   """
 
-  # TODO hardcoded caps
   def_input_pad :input,
     demand_unit: :bytes,
+    # TODO Add support for different formats
     caps: {RawAudio, channels: 2, sample_rate: 48_000, sample_format: :s16le}
 
   def_options endpoint_id: [
