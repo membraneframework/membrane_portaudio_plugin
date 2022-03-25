@@ -29,18 +29,18 @@ defmodule Membrane.PortAudio.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.8.0"},
-      {:membrane_common_c, "~> 0.10.0"},
+      {:membrane_core, "~> 0.9.0"},
+      {:membrane_common_c, "~> 0.11.0"},
       {:bunch, "~> 1.3.0"},
       {:unifex, "~> 0.7.0"},
-      {:membrane_caps_audio_raw, "~> 0.5.0"},
+      {:membrane_raw_audio_format, "~> 0.8.0"},
       {:bundlex, "~> 0.5.0"},
       # Testing
       {:mockery, "~> 2.1", runtime: false},
       # Development
-      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      {:credo, "~> 1.4", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
+      {:credo, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
@@ -51,14 +51,15 @@ defmodule Membrane.PortAudio.Mixfile do
       nest_modules_by_prefix: [
         Membrane.PortAudio
       ],
-      source_ref: "v#{@version}"
+      source_ref: "v#{@version}",
+      formatters: ["html"]
     ]
   end
 
   defp package do
     [
       maintainers: ["Membrane Team"],
-      licenses: ["Apache 2.0"],
+      licenses: ["Apache-2.0"],
       links: %{
         "GitHub" => @github_url,
         "Membrane Framework Homepage" => "https://membraneframework.org"

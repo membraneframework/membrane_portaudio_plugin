@@ -4,7 +4,7 @@ defmodule Membrane.Portaudio.SourceTest do
   use ExUnit.Case, async: true
   use Mockery
   alias Membrane.PortAudio.{Source, Native}
-  alias Membrane.Caps.Audio.Raw, as: Caps
+  alias Membrane.RawAudio
 
   @module Source
 
@@ -31,7 +31,8 @@ defmodule Membrane.Portaudio.SourceTest do
       ref = make_ref()
       mock(Native, [create: 4], {:ok, ref})
 
-      assert {{:ok, caps: {:source, %Caps{channels: 2, sample_rate: 48_000, format: :s16le}}},
+      assert {{:ok,
+               caps: {:source, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}},
               %{state | native: ref}} == @module.handle_prepared_to_playing(nil, state)
     end
   end
