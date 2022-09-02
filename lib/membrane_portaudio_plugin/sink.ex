@@ -7,11 +7,11 @@ defmodule Membrane.PortAudio.Sink do
 
   import Mockery.Macro
 
-  alias Membrane.Buffer
-  alias Membrane.RawAudio
-  alias Membrane.PortAudio.SyncExecutor
-  alias Membrane.Time
   alias __MODULE__.Native
+  alias Membrane.Buffer
+  alias Membrane.PortAudio.SyncExecutor
+  alias Membrane.RawAudio
+  alias Membrane.Time
 
   @pa_no_device -1
 

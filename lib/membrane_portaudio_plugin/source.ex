@@ -5,10 +5,10 @@ defmodule Membrane.PortAudio.Source do
 
   use Membrane.Source
 
-  alias Membrane.Buffer
-  alias Membrane.RawAudio
-  alias Membrane.PortAudio.SyncExecutor
   alias __MODULE__.Native
+  alias Membrane.Buffer
+  alias Membrane.PortAudio.SyncExecutor
+  alias Membrane.RawAudio
 
   @pa_no_device -1
 
