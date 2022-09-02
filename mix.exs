@@ -11,12 +11,18 @@ defmodule Membrane.PortAudio.Mixfile do
       version: @version,
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
+      deps: deps(),
+      dialyzer: dialyzer(),
+
+      # hex
       description: "Raw audio retriever and player based on PortAudio",
       package: package(),
+
+      # docs
       name: "Membrane PortAudio plugin",
       source_url: @github_url,
-      docs: docs(),
-      deps: deps()
+      homepage_url: "https://membrane.stream",
+      docs: docs()
     ]
   end
 
@@ -42,6 +48,19 @@ defmodule Membrane.PortAudio.Mixfile do
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: :dev, runtime: false}
     ]
+  end
+
+  defp dialyzer() do
+    opts = [
+      flags: [:error_handling]
+    ]
+
+    if System.get_env("CI") == "true" do
+      # Store PLTs in cacheable directory for CI
+      [plt_local_path: "priv/plts", plt_core_path: "priv/plts"] ++ opts
+    else
+      opts
+    end
   end
 
   defp docs do

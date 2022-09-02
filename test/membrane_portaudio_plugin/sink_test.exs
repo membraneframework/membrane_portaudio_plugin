@@ -3,9 +3,10 @@ defmodule Membrane.Portaudio.SinkTest do
 
   use ExUnit.Case, async: true
   use Mockery
+
+  alias Membrane.Buffer
   alias Membrane.PortAudio.Sink
   alias Sink.Native
-  alias Membrane.Buffer
 
   @module Sink
 
