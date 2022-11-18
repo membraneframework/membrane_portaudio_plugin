@@ -39,8 +39,7 @@ defmodule Membrane.PortAudio.Mixfile do
       {:membrane_common_c, "~> 0.14.0"},
       {:bunch, "~> 1.5.0"},
       {:unifex, "~> 1.0"},
-      {:membrane_raw_audio_format,
-       github: "membraneframework/membrane_raw_audio_format", branch: "core-v0.11"},
+      {:membrane_raw_audio_format, "~> 0.10.0"},
       {:bundlex, "~> 1.0"},
       # Testing
       {:mockery, "~> 2.1", runtime: false},
