@@ -9,7 +9,6 @@ defmodule Membrane.Portaudio.SourceTest do
   alias Membrane.PortAudio.{Native, Source}
   alias Membrane.RawAudio
 
-
   @module Source
 
   defp state(_ctx) do

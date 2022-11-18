@@ -10,8 +10,6 @@ defmodule Membrane.Portaudio.SinkTest do
   alias Membrane.PortAudio.Sink
   alias Sink.Native
 
-
-
   @module Sink
 
   defp state(ctx) do
