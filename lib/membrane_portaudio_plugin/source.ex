@@ -9,7 +9,6 @@ defmodule Membrane.PortAudio.Source do
   alias Membrane.Buffer
   alias Membrane.PortAudio.SyncExecutor
   alias Membrane.RawAudio
-  alias URI.Error
 
   @pa_no_device -1
 
