@@ -4,8 +4,11 @@ defmodule Membrane.Portaudio.SourceTest do
   use ExUnit.Case, async: true
   use Mockery
 
+  import Membrane.Testing.Assertions
+
   alias Membrane.PortAudio.{Native, Source}
   alias Membrane.RawAudio
+
 
   @module Source
 
@@ -20,35 +23,25 @@ defmodule Membrane.Portaudio.SourceTest do
     %{state: state}
   end
 
-  defp playing(%{state: state}) do
-    %{state: %{state | native: make_ref(), playing: true}}
-  end
-
   setup_all :state
 
-  describe "handle_prepared_to_playing" do
+  describe "handle_playing" do
     @tag skip: "Temporairly disabled due to mocking issues"
-    test "should start portaudio and send caps", %{state: state} do
+    test "should start portaudio and send stream format", %{state: state} do
       ref = make_ref()
       mock(Native, [create: 4], {:ok, ref})
+      {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
 
-      assert {{:ok,
-               caps: {:source, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}},
-              %{state | native: ref}} == @module.handle_prepared_to_playing(nil, state)
-    end
-  end
+      assert {[
+                stream_format:
+                  {:source, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}
+              ],
+              %{state | native: ref}} ==
+               @module.handle_playing(%{resource_guard: resource_guard}, state)
 
-  describe "handle_playing_to_prepared" do
-    setup :playing
-
-    @tag skip: "Temporairly disabled due to mocking issues"
-    test "should close portaudio", %{state: state} do
-      mock(Native, [destroy: 1], :ok)
-
-      assert {:ok, %{state | native: nil}} == @module.handle_playing_to_prepared(nil, state)
-
-      %{native: native} = state
-      assert_called(Native, :destroy, [^native])
+      assert_resource_guard_register(resource_guard, function, _tag)
+      function.()
+      assert_called(Native, :destroy, [^ref])
     end
   end
 
@@ -59,9 +52,14 @@ defmodule Membrane.Portaudio.SourceTest do
       1..20
       |> Task.async_stream(
         fn _i ->
-          assert {{:ok, [_actions]}, state} = @module.handle_prepared_to_playing(nil, state)
+          {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
+
+          assert {{:ok, [_actions]}, _state} =
+                   @module.handle_playing(%{resource_guard: resource_guard}, state)
+
           :timer.sleep(10..200 |> Enum.random())
-          assert {:ok, _state} = @module.handle_playing_to_prepared(nil, state)
+          assert_resource_guard_register(resource_guard, _function, tag)
+          Membrane.ResourceGuard.cleanup(resource_guard, tag)
         end,
         max_concurrency: 4
       )
@@ -69,9 +67,12 @@ defmodule Membrane.Portaudio.SourceTest do
     end
 
     test "after starting some buffers should be received", %{state: state} do
-      assert {{:ok, [_actions]}, state} = @module.handle_prepared_to_playing(nil, state)
+      {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
+
+      assert {{:ok, [_actions]}, _state} =
+               @module.handle_playing(%{resource_guard: resource_guard}, state)
+
       assert_receive({:portaudio_payload, _payload}, 1000)
-      assert {:ok, _state} = @module.handle_playing_to_prepared(nil, state)
     end
   end
 end

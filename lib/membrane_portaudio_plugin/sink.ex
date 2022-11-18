@@ -23,7 +23,7 @@ defmodule Membrane.PortAudio.Sink do
   def_input_pad :input,
     demand_unit: :bytes,
     # TODO Add support for different formats
-    caps: {RawAudio, channels: 2, sample_rate: 48_000, sample_format: :s16le}
+    accepted_format: %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}
 
   def_options endpoint_id: [
                 type: :integer,
@@ -51,8 +51,8 @@ defmodule Membrane.PortAudio.Sink do
               ]
 
   @impl true
-  def handle_init(%__MODULE__{} = options) do
-    {:ok,
+  def handle_init(_ctx, %__MODULE__{} = options) do
+    {[],
      options
      |> Map.from_struct()
      |> Map.merge(%{
@@ -62,7 +62,7 @@ defmodule Membrane.PortAudio.Sink do
   end
 
   @impl true
-  def handle_prepared_to_playing(ctx, state) do
+  def handle_playing(ctx, state) do
     %{
       endpoint_id: endpoint_id,
       ringbuffer_size: ringbuffer_size,
@@ -81,34 +81,29 @@ defmodule Membrane.PortAudio.Sink do
              pa_buffer_size,
              latency
            ]) do
-      {:ok, %{state | latency_time: latency_ms |> Time.milliseconds(), native: native}}
+      Membrane.ResourceGuard.register(ctx.resource_guard, fn ->
+        SyncExecutor.apply(Native, :destroy, native)
+      end)
+
+      {[], %{state | latency_time: latency_ms |> Time.milliseconds(), native: native}}
     else
-      {:error, reason} -> {{:error, reason}, state}
+      {:error, reason} -> raise "Error: #{inspect(reason)}"
     end
   end
 
   @impl true
-  def handle_playing_to_prepared(_ctx, %{native: nil} = state) do
-    {:ok, state}
+  def handle_info({:portaudio_demand, size}, %{playback_state: :playing}, state) do
+    {[demand: {:input, &(&1 + size)}], state}
   end
 
   @impl true
-  def handle_playing_to_prepared(_ctx, %{native: native} = state) do
-    {SyncExecutor.apply(Native, :destroy, native), %{state | native: nil}}
-  end
-
-  @impl true
-  def handle_other({:portaudio_demand, size}, %{playback_state: :playing}, state) do
-    {{:ok, demand: {:input, &(&1 + size)}}, state}
-  end
-
-  @impl true
-  def handle_other({:portaudio_demand, _size}, _ctx, state) do
+  def handle_info({:portaudio_demand, _size}, _ctx, state) do
     {:ok, state}
   end
 
   @impl true
   def handle_write(:input, %Buffer{payload: payload}, _ctx, %{native: native} = state) do
-    {mockable(Native).write_data(payload, native), state}
+    mockable(Native).write_data(payload, native)
+    {[], state}
   end
 end
