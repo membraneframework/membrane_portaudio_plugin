@@ -15,7 +15,7 @@ defmodule Membrane.PortAudio.Source do
   # TODO Add support for different formats
   def_output_pad :output,
     mode: :push,
-    caps: {RawAudio, channels: 2, sample_rate: 48_000, sample_format: :s16le}
+    accepted_format: %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}
 
   def_options endpoint_id: [
                 type: :integer,
@@ -37,8 +37,8 @@ defmodule Membrane.PortAudio.Source do
               ]
 
   @impl true
-  def handle_init(%__MODULE__{} = options) do
-    {:ok,
+  def handle_init(_ctx, %__MODULE__{} = options) do
+    {[],
      options
      |> Map.from_struct()
      |> Map.merge(%{
@@ -47,7 +47,7 @@ defmodule Membrane.PortAudio.Source do
   end
 
   @impl true
-  def handle_prepared_to_playing(_ctx, state) do
+  def handle_playing(ctx, state) do
     %{
       endpoint_id: endpoint_id,
       portaudio_buffer_size: pa_buffer_size,
@@ -58,26 +58,28 @@ defmodule Membrane.PortAudio.Source do
 
     with {:ok, native} <-
            SyncExecutor.apply(Native, :create, [self(), endpoint_id, pa_buffer_size, latency]) do
+      Membrane.ResourceGuard.register(
+        ctx.resource_guard,
+        fn -> SyncExecutor.apply(Native, :destroy, native) end
+      )
+
       # TODO Add support for different formats
-      {{:ok, caps: {:output, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}},
-       %{state | native: native}}
+      {[
+         stream_format:
+           {:output, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}
+       ], %{state | native: native}}
     else
-      {:error, reason} -> {{:error, reason}, state}
+      {:error, reason} -> raise "Error: #{inspect(reason)}"
     end
   end
 
   @impl true
-  def handle_playing_to_prepared(_ctx, %{native: native} = state) do
-    {SyncExecutor.apply(Native, :destroy, native), %{state | native: nil}}
+  def handle_info({:portaudio_payload, payload}, %{playback_state: :playing}, state) do
+    {[buffer: {:output, %Buffer{payload: payload}}], state}
   end
 
   @impl true
-  def handle_other({:portaudio_payload, payload}, %{playback_state: :playing}, state) do
-    {{:ok, buffer: {:output, %Buffer{payload: payload}}}, state}
-  end
-
-  @impl true
-  def handle_other({:portaudio_payload, _payload}, _ctx, state) do
-    {:ok, state}
+  def handle_info({:portaudio_payload, _payload}, _ctx, state) do
+    {[], state}
   end
 end
