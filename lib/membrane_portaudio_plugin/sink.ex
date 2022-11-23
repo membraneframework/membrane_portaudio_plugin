@@ -98,7 +98,7 @@ defmodule Membrane.PortAudio.Sink do
 
   @impl true
   def handle_info({:portaudio_demand, _size}, _ctx, state) do
-    {:ok, state}
+    {[], state}
   end
 
   @impl true
