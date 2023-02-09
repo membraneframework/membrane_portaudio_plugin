@@ -11,7 +11,7 @@ Plugin that can be used to capture and play sound using multiplatform PortAudio 
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-  {:membrane_portaudio_plugin, "~> 0.14.1"}
+  {:membrane_portaudio_plugin, "~> 0.14.2"}
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
@@ -27,17 +27,12 @@ defmodule Membrane.ReleaseTest.Pipeline do
   alias Membrane.PortAudio
 
   @impl true
-  def handle_init(_) do
-    children = [
-      file_src: %Membrane.Element.File.Source{location: "file.raw"},
-      pa_sink: PortAudio.Sink
+  def handle_init(_ctx, _opts) do
+    structure = 
+      child(:file_src, %Membrane.Element.File.Source{location: "file.raw"})
+      |> child(:pa_sink, PortAudio.Sink)
     ]
-    links = [
-      link(:file_src)
-      |> to(:pa_sink)
-    ]
-
-    {{:ok, %ParentSpec{children: children, links: links}}, %{}}
+    {[spec: structure], %{}}
   end
 end
 ```
@@ -51,17 +46,12 @@ defmodule Membrane.ReleaseTest.Pipeline do
   alias Membrane.PortAudio
 
   @impl true
-  def handle_init(_) do
-    children = [
-      pa_src: PortAudio.Source,
-      pa_sink: PortAudio.Sink
-    ]
-    links = [
-      link(:pa_src)
-      |> to(:pa_sink)
-    ]
+  def handle_init(_ctx, _opts) do
+    structure =
+      child(:pa_src, PortAudio.Source)
+      |> child(:pa_sink, PortAudio.Sink)
 
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+    {[spec: structure], %{}}
   end
 end
 ```
