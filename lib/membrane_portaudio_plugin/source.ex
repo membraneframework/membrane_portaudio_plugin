@@ -74,7 +74,7 @@ defmodule Membrane.PortAudio.Source do
   end
 
   @impl true
-  def handle_info({:portaudio_payload, payload}, %{playback_state: :playing}, state) do
+  def handle_info({:portaudio_payload, payload}, %{playback: :playing}, state) do
     {[buffer: {:output, %Buffer{payload: payload}}], state}
   end
 
