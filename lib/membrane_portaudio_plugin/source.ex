@@ -15,7 +15,7 @@ defmodule Membrane.PortAudio.Source do
   # TODO Add support for different formats
   def_output_pad :output,
     mode: :push,
-    accepted_format: %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}
+    accepted_format: %RawAudio{sample_format: :s16le}
 
   def_options endpoint_id: [
                 type: :integer,
@@ -34,6 +34,11 @@ defmodule Membrane.PortAudio.Source do
                 spec: :low | :high,
                 default: :high,
                 description: "Latency of the output device"
+              ],
+              max_channels: [
+                spec: 1..2,
+                default: 2,
+                description: " Max number of channels that the device will be allowed to output "
               ]
 
   @impl true
@@ -51,13 +56,20 @@ defmodule Membrane.PortAudio.Source do
     %{
       endpoint_id: endpoint_id,
       portaudio_buffer_size: pa_buffer_size,
-      latency: latency
+      latency: latency,
+      max_channels: max_channels
     } = state
 
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
-    with {:ok, native} <-
-           SyncExecutor.apply(Native, :create, [self(), endpoint_id, pa_buffer_size, latency]) do
+    with {:ok, native, channels, sample_rate} <-
+           SyncExecutor.apply(Native, :create, [
+             self(),
+             endpoint_id,
+             pa_buffer_size,
+             latency,
+             max_channels
+           ]) do
       Membrane.ResourceGuard.register(
         ctx.resource_guard,
         fn -> SyncExecutor.apply(Native, :destroy, native) end
@@ -66,7 +78,8 @@ defmodule Membrane.PortAudio.Source do
       # TODO Add support for different formats
       {[
          stream_format:
-           {:output, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}
+           {:output,
+            %RawAudio{channels: channels, sample_rate: sample_rate, sample_format: :s16le}}
        ], %{state | native: native}}
     else
       {:error, reason} -> raise "Error: #{inspect(reason)}"

@@ -2,12 +2,7 @@
 #define MEMBRANE_LOG_TAG "Membrane.PortAudio.Sink"
 #include <membrane/log.h>
 
-#define FRAME_SIZE 4 // TODO hardcoded format, stereo frame, 16bit
 #define BUFFERS_PER_TICK 100
-
-#define SAMPLE_RATE 48000
-#define SAMPLE_RATE_PER_MS (SAMPLE_RATE / 1000)
-#define CHANNELS_NUM 2
 
 void handle_destroy_state(UnifexEnv *env, SinkState *state) {
   if (state->is_content_destroyed)
@@ -37,7 +32,7 @@ static int callback(const void *_input_buffer, void *output_buffer,
   if (++state->ticks % BUFFERS_PER_TICK == 0) {
     send_membrane_clock_update(env, state->membrane_clock, UNIFEX_SEND_THREADED,
                                BUFFERS_PER_TICK * frames_per_buffer,
-                               SAMPLE_RATE_PER_MS);
+                               state->sample_rate / 1000);
   }
 
   size_t elements_available =
@@ -48,7 +43,7 @@ static int callback(const void *_input_buffer, void *output_buffer,
     if (state->demand + elements_read > state->ringbuffer->max_elements / 2) {
       if (!send_portaudio_demand(
               env, state->demand_handler, UNIFEX_SEND_THREADED,
-              (state->demand + elements_read) * FRAME_SIZE)) {
+              (state->demand + elements_read) * state->frame_size)) {
         MEMBRANE_THREADED_WARN(env, "PortAudio sink: failed to send demand");
       }
       state->demand = 0;
@@ -56,7 +51,7 @@ static int callback(const void *_input_buffer, void *output_buffer,
       state->demand += elements_read;
     }
   } else {
-    memset(output_buffer, 0, frames_per_buffer * FRAME_SIZE);
+    memset(output_buffer, 0, frames_per_buffer * state->frame_size);
   }
   unifex_free_env(env);
   return paContinue;
@@ -64,6 +59,8 @@ static int callback(const void *_input_buffer, void *output_buffer,
 
 UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
                    UnifexPid membrane_clock, int endpoint_id,
+                   int sample_rate, int channels,
+                   char* sample_format_str,
                    int ringbuffer_size, int pa_buffer_size, char *latency) {
   MEMBRANE_DEBUG(env, "initializing");
 
@@ -71,9 +68,18 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
   SinkState *state = NULL;
   int latency_ms;
   UNIFEX_TERM res;
+  
+  PaSampleFormat sample_format = string_to_PaSampleFormat(sample_format_str);
+  
+  if(sample_format == UNSUPPORTED_SAMPLE_FORMAT) {
+    error = "Unsupported sample format";
+    goto error;
+  }
+  
+  int frame_size = channels * sample_size(sample_format);
 
   MembraneRingBuffer *ringbuffer =
-      membrane_ringbuffer_new(ringbuffer_size, FRAME_SIZE);
+      membrane_ringbuffer_new(ringbuffer_size, frame_size);
   if (!ringbuffer) {
     MEMBRANE_WARN(env, "Error initializing ringbuffer");
     error = "ringbuffer_init";
@@ -81,7 +87,7 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
   }
 
   send_portaudio_demand(env, demand_handler, UNIFEX_NO_FLAGS,
-                        ringbuffer_size * FRAME_SIZE);
+                        ringbuffer_size * frame_size);
 
   state = unifex_alloc_state(env);
   state->is_content_destroyed = 0;
@@ -91,12 +97,16 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
   state->stream = NULL;
   state->demand = 0;
   state->ticks = 0;
+  state->frame_size = frame_size;
+  state->sample_rate = sample_rate;
+  
+  double sample_rate_double = sample_rate * 1.0;
 
   error = init_pa(env, MEMBRANE_LOG_TAG, STREAM_DIRECTION_OUT, &(state->stream),
                   state,
                   paInt16,      // sample format #TODO hardcoded
-                  SAMPLE_RATE,  // sample rate #TODO hardcoded
-                  CHANNELS_NUM, // channels #TODO hardcoded
+                  &sample_rate_double,
+                  &channels,
                   latency, &latency_ms, pa_buffer_size, endpoint_id, callback);
 
   if (error) {
@@ -118,11 +128,11 @@ error:
 UNIFEX_TERM write_data(UnifexEnv *env, UnifexPayload *payload,
                        SinkState *state) {
   size_t elements_written = membrane_ringbuffer_write(
-      state->ringbuffer, payload->data, payload->size / FRAME_SIZE);
-  if (elements_written != payload->size / FRAME_SIZE) {
+      state->ringbuffer, payload->data, payload->size / state->frame_size);
+  if (elements_written != payload->size / state->frame_size) {
     MEMBRANE_WARN(env,
                   "Write: written only %d out of %lu bytes into ringbuffer",
-                  elements_written * FRAME_SIZE, payload->size);
+                  elements_written * state->frame_size, payload->size);
     return write_data_result_error_overrun(env);
   }
   return write_data_result_ok(env);

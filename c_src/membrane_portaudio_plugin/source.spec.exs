@@ -8,8 +8,11 @@ spec create(
        destination :: pid,
        endpoint_id :: int,
        pa_buffer_size :: int,
-       latency :: atom
-     ) :: {:ok :: label, state} | {:error :: label, reason :: atom}
+       latency :: atom,
+       max_channels :: int
+     ) ::
+       {:ok :: label, state, channels :: int, sample_rate :: int}
+       | {:error :: label, reason :: atom}
 
 spec destroy(state) :: :ok
 

@@ -22,8 +22,8 @@ defmodule Membrane.PortAudio.Sink do
 
   def_input_pad :input,
     demand_unit: :bytes,
-    # TODO Add support for different formats
-    accepted_format: %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}
+    accepted_format:
+      %RawAudio{sample_format: format} when format in [:f32le, :s32le, :s24le, :s16le, :s8, :u8]
 
   def_options endpoint_id: [
                 type: :integer,
@@ -62,7 +62,7 @@ defmodule Membrane.PortAudio.Sink do
   end
 
   @impl true
-  def handle_playing(ctx, state) do
+  def handle_stream_format(:input, %Membrane.RawAudio{} = format, ctx, state) do
     %{
       endpoint_id: endpoint_id,
       ringbuffer_size: ringbuffer_size,
@@ -77,6 +77,9 @@ defmodule Membrane.PortAudio.Sink do
              self(),
              ctx.clock,
              endpoint_id,
+             format.sample_rate,
+             format.channels,
+             format.sample_format,
              ringbuffer_size,
              pa_buffer_size,
              latency

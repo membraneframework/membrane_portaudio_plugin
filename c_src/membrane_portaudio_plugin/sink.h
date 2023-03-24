@@ -16,6 +16,8 @@ typedef struct _SinkState {
   UnifexPid membrane_clock;
   int demand;
   int ticks;
+  int sample_rate;
+  int frame_size;
 } SinkState;
 
 #include "_generated/sink.h"
