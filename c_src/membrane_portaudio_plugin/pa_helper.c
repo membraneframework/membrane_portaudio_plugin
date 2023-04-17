@@ -40,18 +40,25 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
     ret_error = "invalid_latency";
     goto error;
   }
-
-  if(*channels > device_info->maxInputChannels) {
-    switch(direction) {
-      case STREAM_DIRECTION_IN:
-        *channels = device_info->maxInputChannels;
-        break;
-
-      case STREAM_DIRECTION_OUT:
-        return "Incoming stream has more channels than the device can handle";
-    }
-  }
   
+  switch(direction) {
+    case STREAM_DIRECTION_IN:
+      if(*channels == 0) {
+        *channels = device_info->maxInputChannels;
+      } else if (*channels > device_info->maxInputChannels) {
+        return "Device doesn't support that many input channels";
+      }
+      break;
+
+    case STREAM_DIRECTION_OUT:
+      if (*channels > device_info->maxOutputChannels) {
+        return "Device doesn't support that many output channels";
+      } else if (*channels == 0) {
+        return "Channel count must be configured for output mode";
+      }
+      break;
+  }
+
   if(*sample_rate <= 0.0) {
     switch(direction) {
       case STREAM_DIRECTION_IN:

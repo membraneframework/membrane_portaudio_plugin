@@ -44,7 +44,7 @@ static int callback(const void *input_buffer, void *_output_buffer,
 }
 
 UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
-                   int pa_buffer_size, char *latency, int max_channels) {
+                   int pa_buffer_size, char *latency, int channels, int sample_rate_int) {
   MEMBRANE_DEBUG(env, "Initializing");
 
   SourceState *state = unifex_alloc_state(env);
@@ -52,20 +52,20 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
   state->destination = destination;
   state->stream = NULL;
   
-  double sample_rate = -1.0;
+  double sample_rate = (double) sample_rate_int;
 
   int _latency_ms;
   char *error = init_pa(
       env, MEMBRANE_LOG_TAG, STREAM_DIRECTION_IN, &(state->stream), state,
       paInt16, // sample format
       &sample_rate, // device's default sample rate will be selected
-      &max_channels,
+      &channels,
       latency, &_latency_ms, pa_buffer_size, endpoint_id, callback);
   
-  state->channels = max_channels;
+  state->channels = channels;
 
   UNIFEX_TERM res =
-      error ? create_result_error(env, error) : create_result_ok(env, state, max_channels, floor(sample_rate));
+      error ? create_result_error(env, error) : create_result_ok(env, state, channels, floor(sample_rate));
   unifex_release_state(env, state);
   return res;
 }

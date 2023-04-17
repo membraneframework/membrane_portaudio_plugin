@@ -9,7 +9,8 @@ spec create(
        endpoint_id :: int,
        pa_buffer_size :: int,
        latency :: atom,
-       max_channels :: int
+       max_channels :: int,
+       sample_rate :: int
      ) ::
        {:ok :: label, state, channels :: int, sample_rate :: int}
        | {:error :: label, reason :: atom}

@@ -35,9 +35,18 @@ defmodule Membrane.PortAudio.Source do
                 default: :high,
                 description: "Latency of the output device"
               ],
-              max_channels: [
-                spec: 1..2,
-                default: 2,
+              sample_rate: [
+                spec: non_neg_integer(),
+                default: -1,
+                description: """
+                Sample rate for input device.
+
+                If not set, device's default sample rate will be used.
+                """
+              ],
+              channels: [
+                spec: 0..2,
+                default: 0,
                 description: " Max number of channels that the device will be allowed to output "
               ]
 
@@ -57,7 +66,8 @@ defmodule Membrane.PortAudio.Source do
       endpoint_id: endpoint_id,
       portaudio_buffer_size: pa_buffer_size,
       latency: latency,
-      max_channels: max_channels
+      channels: channels,
+      sample_rate: sample_rate
     } = state
 
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
@@ -68,7 +78,8 @@ defmodule Membrane.PortAudio.Source do
              endpoint_id,
              pa_buffer_size,
              latency,
-             max_channels
+             channels,
+             sample_rate
            ]) do
       Membrane.ResourceGuard.register(
         ctx.resource_guard,
