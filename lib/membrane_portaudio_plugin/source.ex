@@ -37,7 +37,7 @@ defmodule Membrane.PortAudio.Source do
               ],
               sample_rate: [
                 spec: non_neg_integer(),
-                default: -1,
+                default: nil,
                 description: """
                 Sample rate for input device.
 
@@ -79,7 +79,7 @@ defmodule Membrane.PortAudio.Source do
              pa_buffer_size,
              latency,
              channels,
-             sample_rate
+             sample_rate || 1
            ]) do
       Membrane.ResourceGuard.register(
         ctx.resource_guard,
