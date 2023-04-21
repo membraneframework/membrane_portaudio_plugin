@@ -8,6 +8,9 @@ spec create(
        demand_handler :: pid,
        clock :: pid,
        endpoint_id :: int,
+       sample_rate :: int,
+       channels :: int,
+       sample_format :: atom,
        ringbuffer_size :: int,
        pa_buffer_size :: int,
        latency :: atom

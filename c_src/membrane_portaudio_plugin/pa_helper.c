@@ -4,7 +4,7 @@
 
 char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
               PaStream **stream, void *state, PaSampleFormat sample_format,
-              int sample_rate, int channels, char *latency_str, int *latency_ms,
+              double *sample_rate, int *channels, char *latency_str, int *latency_ms,
               int pa_buffer_size, PaDeviceIndex endpoint_id,
               PaStreamCallback *callback) {
   char *ret_error = NULL;
@@ -40,9 +40,39 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
     ret_error = "invalid_latency";
     goto error;
   }
+  
+  switch(direction) {
+    case STREAM_DIRECTION_IN:
+      if(*channels == 0) {
+        *channels = device_info->maxInputChannels;
+      } else if (*channels > device_info->maxInputChannels) {
+        return "Device doesn't support that many input channels";
+      }
+      break;
+
+    case STREAM_DIRECTION_OUT:
+      if (*channels > device_info->maxOutputChannels) {
+        return "Device doesn't support that many output channels";
+      } else if (*channels == 0) {
+        return "Channel count must be configured for output mode";
+      }
+      break;
+  }
+
+  if(*sample_rate <= 0.0) {
+    switch(direction) {
+      case STREAM_DIRECTION_IN:
+        *sample_rate = device_info->defaultSampleRate;
+        break;
+        
+      case STREAM_DIRECTION_OUT:
+       return "Invalid sample rate value";
+    }
+  }
+
 
   PaStreamParameters stream_params = {.device = endpoint_id,
-                                      .channelCount = channels,
+                                      .channelCount = *channels,
                                       .sampleFormat = sample_format,
                                       .suggestedLatency = latency,
                                       .hostApiSpecificStreamInfo = NULL};
@@ -56,7 +86,7 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
 
   pa_error =
       Pa_OpenStream(stream, input_stream_params_ptr, output_stream_params_ptr,
-                    sample_rate, pa_buffer_size, paNoFlag, callback,
+                    *sample_rate, pa_buffer_size, paNoFlag, callback,
                     state // passed to the callback
       );
 
@@ -120,4 +150,43 @@ char *destroy_pa(UnifexEnv *env, char *log_tag, PaStream *stream) {
   }
 
   return error;
+}
+
+PaSampleFormat string_to_PaSampleFormat(char* format) {
+  if(strcmp(format, "f32le") == 0) {
+    return paFloat32;
+  } else if (strcmp(format, "s32le") == 0) {
+    return paInt32;
+  } else if (strcmp(format, "s24le") == 0) {
+    return paInt24;
+  } else if (strcmp(format, "s16le") == 0) {
+    return paInt16;
+  } else if (strcmp(format, "s8") == 0) {
+    return paInt8;
+  } else if (strcmp(format, "u8") == 0) {
+    return paUInt8;
+  }
+  
+  return UNSUPPORTED_SAMPLE_FORMAT;
+}
+
+int sample_size(PaSampleFormat sample_format) {
+  switch (sample_format) {
+    case paFloat32:
+    case paInt32:
+      return 4;
+
+    case paInt24:
+      return 3;
+
+    case paInt16:
+      return 2;
+
+    case paInt8:
+    case paUInt8:
+      return 1;
+      
+    default:
+      return 0;
+  }
 }

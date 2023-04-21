@@ -2,7 +2,7 @@
 #define MEMBRANE_LOG_TAG "Membrane.PortAudio.Sink"
 #include <membrane/log.h>
 
-#define FRAME_SIZE 4 // TODO hardcoded format, stereo frame, 16bit
+#define SAMPLE_SIZE 2 // TODO hardcoded format, 16bit
 
 void handle_destroy_state(UnifexEnv *env, SourceState *state) {
   if (state->is_content_destroyed)
@@ -30,7 +30,7 @@ static int callback(const void *input_buffer, void *_output_buffer,
   UnifexEnv *env = unifex_alloc_env(NULL);
 
   UnifexPayload payload;
-  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, frames * FRAME_SIZE, &payload);
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, frames * state->channels * SAMPLE_SIZE, &payload);
   memcpy(payload.data, input_buffer, payload.size);
   if (!send_portaudio_payload(env, state->destination, UNIFEX_SEND_THREADED,
                               &payload)) {
@@ -44,24 +44,28 @@ static int callback(const void *input_buffer, void *_output_buffer,
 }
 
 UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
-                   int pa_buffer_size, char *latency) {
+                   int pa_buffer_size, char *latency, int channels, int sample_rate_int) {
   MEMBRANE_DEBUG(env, "Initializing");
 
   SourceState *state = unifex_alloc_state(env);
   state->is_content_destroyed = 0;
   state->destination = destination;
   state->stream = NULL;
+  
+  double sample_rate = (double) sample_rate_int;
 
   int _latency_ms;
   char *error = init_pa(
       env, MEMBRANE_LOG_TAG, STREAM_DIRECTION_IN, &(state->stream), state,
-      paInt16, // sample format #TODO hardcoded
-      48000,   // sample rate #TODO hardcoded
-      2,       // channels #TODO hardcoded
+      paInt16, // sample format
+      &sample_rate, // device's default sample rate will be selected
+      &channels,
       latency, &_latency_ms, pa_buffer_size, endpoint_id, callback);
+  
+  state->channels = channels;
 
   UNIFEX_TERM res =
-      error ? create_result_error(env, error) : create_result_ok(env, state);
+      error ? create_result_error(env, error) : create_result_ok(env, state, channels, floor(sample_rate));
   unifex_release_state(env, state);
   return res;
 }
