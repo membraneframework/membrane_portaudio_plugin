@@ -79,7 +79,7 @@ defmodule Membrane.PortAudio.Source do
              pa_buffer_size,
              latency,
              channels,
-             sample_rate || 1
+             sample_rate || -1
            ]) do
       Membrane.ResourceGuard.register(
         ctx.resource_guard,
