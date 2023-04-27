@@ -15,6 +15,7 @@ Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
+For Mac OS you can install it via Homebrew: `brew install portaudio`, on Debian via apt-get: `apt-get install portaudio19-dev`.
 
 ## Sample usage
 
