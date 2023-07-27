@@ -11,7 +11,7 @@ Plugin that can be used to capture and play sound using multiplatform PortAudio 
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-	{:membrane_portaudio_plugin, "~> 0.16.0"}
+	{:membrane_portaudio_plugin, "~> 0.16.1"}
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
@@ -32,7 +32,7 @@ defmodule Membrane.ReleaseTest.Pipeline do
     structure = 
       child(:file_src, %Membrane.Element.File.Source{location: "file.raw"})
       |> child(:pa_sink, PortAudio.Sink)
-    ]
+    
     {[spec: structure], %{}}
   end
 end
