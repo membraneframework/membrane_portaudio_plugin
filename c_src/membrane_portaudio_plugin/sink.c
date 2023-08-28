@@ -58,24 +58,23 @@ static int callback(const void *_input_buffer, void *output_buffer,
 }
 
 UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
-                   UnifexPid membrane_clock, int endpoint_id,
-                   int sample_rate, int channels,
-                   char* sample_format_str,
-                   int ringbuffer_size, int pa_buffer_size, char *latency) {
+                   UnifexPid membrane_clock, int endpoint_id, int sample_rate,
+                   int channels, char *sample_format_str, int ringbuffer_size,
+                   int pa_buffer_size, char *latency) {
   MEMBRANE_DEBUG(env, "initializing");
 
   char *error;
   SinkState *state = NULL;
   int latency_ms;
   UNIFEX_TERM res;
-  
+
   PaSampleFormat sample_format = string_to_PaSampleFormat(sample_format_str);
-  
-  if(sample_format == UNSUPPORTED_SAMPLE_FORMAT) {
+
+  if (sample_format == UNSUPPORTED_SAMPLE_FORMAT) {
     error = "Unsupported sample format";
     goto error;
   }
-  
+
   int frame_size = channels * sample_size(sample_format);
 
   MembraneRingBuffer *ringbuffer =
@@ -99,15 +98,12 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
   state->ticks = 0;
   state->frame_size = frame_size;
   state->sample_rate = sample_rate;
-  
+
   double sample_rate_double = sample_rate * 1.0;
 
   error = init_pa(env, MEMBRANE_LOG_TAG, STREAM_DIRECTION_OUT, &(state->stream),
-                  state,
-                  paInt16,      // sample format #TODO hardcoded
-                  &sample_rate_double,
-                  &channels,
-                  latency, &latency_ms, pa_buffer_size, endpoint_id, callback);
+                  state, sample_format, &sample_rate_double, &channels, latency,
+                  &latency_ms, pa_buffer_size, endpoint_id, callback);
 
   if (error) {
     goto error;
