@@ -22,7 +22,9 @@ defmodule Membrane.Portaudio.SinkTest do
       })
 
     {:ok, clock} = Membrane.Clock.start_link()
-    ctx = %{clock: clock}
+
+    {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
+    ctx = %{clock: clock, resource_guard: resource_guard}
 
     %{ctx: ctx, state: state}
   end
@@ -35,15 +37,13 @@ defmodule Membrane.Portaudio.SinkTest do
 
   describe "handle_playing" do
     @tag skip: "Temporairly disabled due to mocking issues"
-    test "should start portaudio and register its cleanup", %{state: state} do
+    test "should start portaudio and register its cleanup", %{ctx: ctx, state: state} do
       ref = make_ref()
       mock(Native, [create: 5], {:ok, ref})
-      {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
 
-      assert {:ok, %{state | native: ref}} ==
-               @module.handle_playing(%{resource_guard: resource_guard}, state)
+      assert {[], %{state | native: ref}} == @module.handle_playing(ctx, state)
 
-      assert_resource_guard_register(resource_guard, function, _tag)
+      assert_resource_guard_register(ctx.resource_guard, function, _tag)
       function.()
       assert_called(Native, :destroy, [^ref])
     end
@@ -68,9 +68,9 @@ defmodule Membrane.Portaudio.SinkTest do
       1..20
       |> Task.async_stream(
         fn _i ->
-          assert {:ok, state} = @module.handle_playing(ctx, state)
+          assert {[], state} = @module.handle_playing(ctx, state)
           :timer.sleep(10..200 |> Enum.random())
-          assert {:ok, _state} = @module.handle_playing(ctx, state)
+          assert {[], _state} = @module.handle_playing(ctx, state)
         end,
         max_concurrency: 4
       )
@@ -81,7 +81,8 @@ defmodule Membrane.Portaudio.SinkTest do
       ctx: ctx,
       state: state
     } do
-      assert {:ok, state} = @module.handle_playing(ctx, state)
+      format = %Membrane.RawAudio{sample_format: :s16le, sample_rate: 48_000, channels: 2}
+      assert {[], state} = @module.handle_stream_format(:input, format, ctx, state)
       assert_receive({:portaudio_demand, initial_demand_size}, 1000)
       assert initial_demand_size == 4 * state.ringbuffer_size
     end

@@ -10,6 +10,7 @@
 typedef struct _SourceState {
   int is_content_destroyed;
   int channels;
+  int frame_size;
   PaStream *stream;
   UnifexPid destination; // Where capture thread will send messages
 } SourceState;

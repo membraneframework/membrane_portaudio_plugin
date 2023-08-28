@@ -9,6 +9,7 @@ spec create(
        endpoint_id :: int,
        pa_buffer_size :: int,
        latency :: atom,
+       sample_format :: atom,
        max_channels :: int,
        sample_rate :: int
      ) ::
