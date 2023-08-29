@@ -15,6 +15,9 @@ defmodule Membrane.Portaudio.SourceTest do
     state = %{
       endpoint_id: :default,
       portaudio_buffer_size: 256,
+      sample_format: :s16le,
+      channels: 0,
+      sample_rate: nil,
       latency: :high,
       native: nil
     }
@@ -53,7 +56,7 @@ defmodule Membrane.Portaudio.SourceTest do
         fn _i ->
           {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
 
-          assert {{:ok, [_actions]}, _state} =
+          assert {_actions, _state} =
                    @module.handle_playing(%{resource_guard: resource_guard}, state)
 
           :timer.sleep(10..200 |> Enum.random())
@@ -68,8 +71,7 @@ defmodule Membrane.Portaudio.SourceTest do
     test "after starting some buffers should be received", %{state: state} do
       {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
 
-      assert {{:ok, [_actions]}, _state} =
-               @module.handle_playing(%{resource_guard: resource_guard}, state)
+      assert {_actions, _state} = @module.handle_playing(%{resource_guard: resource_guard}, state)
 
       assert_receive({:portaudio_payload, _payload}, 1000)
     end

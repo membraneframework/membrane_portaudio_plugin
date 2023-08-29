@@ -10,44 +10,55 @@ defmodule Membrane.PortAudio.Source do
   alias Membrane.PortAudio.SyncExecutor
   alias Membrane.RawAudio
 
+  @sample_formats [:u8le, :s8le, :s16le, :s24le, :s32le, :f32le]
+  @type sample_format :: unquote(Bunch.Typespec.enum_to_alternative(@sample_formats))
+
   @pa_no_device -1
 
   # TODO Add support for different formats
   def_output_pad :output,
     mode: :push,
-    accepted_format: %RawAudio{sample_format: :s16le}
+    accepted_format: %RawAudio{sample_format: format} when format in @sample_formats
 
   def_options endpoint_id: [
-                type: :integer,
                 spec: integer | :default,
                 default: :default,
                 description: "PortAudio sound card id"
               ],
               portaudio_buffer_size: [
-                type: :integer,
                 spec: pos_integer,
                 default: 256,
-                description: "Size of the portaudio buffer (in frames)"
+                description: "Size of the PortAudio buffer (in frames)"
               ],
               latency: [
-                type: :atom,
                 spec: :low | :high,
                 default: :high,
-                description: "Latency of the output device"
+                description: "Latency of the input device"
+              ],
+              sample_format: [
+                spec: sample_format(),
+                default: :s16le,
+                description: """
+                Sample format to output.
+                """
               ],
               sample_rate: [
                 spec: non_neg_integer(),
                 default: nil,
                 description: """
-                Sample rate for input device.
+                Sample rate to output.
 
                 If not set, device's default sample rate will be used.
                 """
               ],
               channels: [
-                spec: 0..2,
-                default: 0,
-                description: " Max number of channels that the device will be allowed to output "
+                spec: 1..2,
+                default: nil,
+                description: """
+                Number of channels to output.
+
+                If not set, device's default will be used.
+                """
               ]
 
   @impl true
@@ -66,6 +77,7 @@ defmodule Membrane.PortAudio.Source do
       endpoint_id: endpoint_id,
       portaudio_buffer_size: pa_buffer_size,
       latency: latency,
+      sample_format: sample_format,
       channels: channels,
       sample_rate: sample_rate
     } = state
@@ -78,7 +90,8 @@ defmodule Membrane.PortAudio.Source do
              endpoint_id,
              pa_buffer_size,
              latency,
-             channels,
+             sample_format,
+             channels || 0,
              sample_rate || -1
            ]) do
       Membrane.ResourceGuard.register(
@@ -86,11 +99,10 @@ defmodule Membrane.PortAudio.Source do
         fn -> SyncExecutor.apply(Native, :destroy, native) end
       )
 
-      # TODO Add support for different formats
       {[
          stream_format:
            {:output,
-            %RawAudio{channels: channels, sample_rate: sample_rate, sample_format: :s16le}}
+            %RawAudio{channels: channels, sample_rate: sample_rate, sample_format: sample_format}}
        ], %{state | native: native}}
     else
       {:error, reason} -> raise "Error: #{inspect(reason)}"
