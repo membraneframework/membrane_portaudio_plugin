@@ -53,7 +53,7 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
   state->stream = NULL;
 
   double sample_rate = (double)sample_rate_int;
-  int sample_format = string_to_PaSampleFormat(sample_format_str);
+  PaSampleFormat sample_format = string_to_PaSampleFormat(sample_format_str);
 
   int _latency_ms;
   char *error =
