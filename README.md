@@ -4,14 +4,14 @@
 [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](https://hexdocs.pm/membrane_portaudio_plugin/)
 [![CircleCI](https://circleci.com/gh/membraneframework/membrane_portaudio_plugin.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane_portaudio_plugin)
 
-Plugin that can be used to capture and play sound using multiplatform PortAudio library.
+The plugin that captures and plays sound using the multiplatform PortAudio library.
 
 ## Installation
 
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-	{:membrane_portaudio_plugin, "~> 0.16.1"}
+	{:membrane_portaudio_plugin, "~> 0.16.2"}
 ```
 
 You also need to have [PortAudio](http://portaudio.com/) installed.
@@ -19,7 +19,7 @@ For Mac OS you can install it via Homebrew: `brew install portaudio`, on Debian 
 
 ## Sample usage
 
-Playing below pipeline should play a raw file to default output device.
+The pipeline below should play a raw file to a default output device.
 
 ```elixir
 defmodule Membrane.ReleaseTest.Pipeline do
@@ -38,7 +38,7 @@ defmodule Membrane.ReleaseTest.Pipeline do
 end
 ```
 
-And this one should forward sound from default input to default output. DO NOT USE WITHOUT HEADPHONES to avoid audio feedback.
+And this one should forward sound from the default input to the default output. DO NOT USE WITHOUT HEADPHONES to avoid audio feedback.
 
 ```elixir
 defmodule Membrane.ReleaseTest.Pipeline do
@@ -59,7 +59,7 @@ end
 
 ## Testing
 
-Tests contain some cases that use portaudio stuff instead of mocking. Such cases require presence of at least one input and output soundcard, thus they are disabled by default. To enable them, run
+Tests contain some cases that use PortAudio stuff instead of mocking. Such cases require the presence of at least one input and output sound card, thus they are disabled by default. To enable them, run
 ```
 mix test --include soundcard
 ```
