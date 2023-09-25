@@ -11,7 +11,7 @@ defmodule Membrane.PortAudio.BundlexProject do
     case Bundlex.get_target() do
       %{os: "linux"} ->
         {:precompiled,
-         "https://github.com/membraneframework-labs/precompiled_portaudio/releases/download/version1/portaudio_linux.tar.gz"}
+         "https://github.com/membraneframework-precompiled/precompiled_portaudio/releases/download/version1/portaudio_linux.tar.gz"}
 
       %{architecture: "x86_64", os: "darwin" <> _rest_of_os_name} ->
         {:precompiled,
