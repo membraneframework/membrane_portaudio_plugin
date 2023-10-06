@@ -8,14 +8,18 @@ defmodule Membrane.PortAudio.BundlexProject do
   end
 
   defp get_portaudio_url() do
+    url_prefix =
+      "https://github.com/membraneframework-precompiled/precompiled_portaudio/releases/latest/download/portaudio"
+
     case Bundlex.get_target() do
       %{os: "linux"} ->
-        {:precompiled,
-         "https://github.com/membraneframework-precompiled/precompiled_portaudio/releases/download/version1/portaudio_linux.tar.gz"}
+        {:precompiled, "#{url_prefix}_linux.tar.gz"}
 
       %{architecture: "x86_64", os: "darwin" <> _rest_of_os_name} ->
-        {:precompiled,
-         "https://github.com/membraneframework-precompiled/precompiled_portaudio/releases/download/version1/portaudio_macos_intel.tar.gz"}
+        {:precompiled, "#{url_prefix}_macos_intel.tar.gz"}
+
+      %{architecture: "aarch64", os: "darwin" <> _rest_of_os_name} ->
+        {:precompiled, "#{url_prefix}_macos_arm.tar.gz"}
 
       _other ->
         nil
