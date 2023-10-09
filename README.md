@@ -16,7 +16,24 @@ Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 This package depends on the [PortAudio](http://portaudio.com/) library. The precompiled build will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
 
-For Mac OS you can install it via Homebrew: `brew install portaudio`, on Debian via apt-get: `apt-get install portaudio19-dev`.
+### Manual instalation of dependencies
+#### Ubuntu
+
+```bash
+sudo apt-get install portaudio19-dev
+```
+
+#### Arch/Manjaro
+
+```bash
+pacman -S portaudio
+```
+
+#### MacOS
+
+```bash
+brew install portaudio
+```
 
 ## Sample usage
 

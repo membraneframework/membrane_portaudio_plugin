@@ -32,14 +32,14 @@ defmodule Membrane.PortAudio.BundlexProject do
         interface: :nif,
         deps: [membrane_common_c: [:membrane, :membrane_ringbuffer], unifex: :unifex],
         sources: ["sink.c", "pa_helper.c"],
-        os_deps: [{get_portaudio_url(), "portaudio"}],
+        os_deps: [{[get_portaudio_url(), :pkg_config], "portaudio"}],
         preprocessor: Unifex
       ],
       source: [
         interface: :nif,
         deps: [membrane_common_c: :membrane, unifex: :unifex],
         sources: ["source.c", "pa_helper.c"],
-        os_deps: [{get_portaudio_url(), "portaudio"}],
+        os_deps: [{[get_portaudio_url(), :pkg_config], "portaudio"}],
         preprocessor: Unifex
       ]
     ]
