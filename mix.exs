@@ -13,6 +13,7 @@ defmodule Membrane.PortAudio.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       dialyzer: dialyzer(),
+      aliases: [pa_devices: "eval 'Membrane.PortAudio.print_devices()'"],
 
       # hex
       description: "Raw audio retriever and player based on PortAudio",

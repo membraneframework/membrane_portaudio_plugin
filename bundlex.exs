@@ -41,6 +41,13 @@ defmodule Membrane.PortAudio.BundlexProject do
         sources: ["source.c", "pa_helper.c"],
         os_deps: [get_portaudio()],
         preprocessor: Unifex
+      ],
+      pa_devices: [
+        interface: :nif,
+        deps: [unifex: :unifex],
+        sources: ["pa_devices.c"],
+        os_deps: [get_portaudio()],
+        preprocessor: Unifex
       ]
     ]
   end

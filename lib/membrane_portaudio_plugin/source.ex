@@ -23,7 +23,12 @@ defmodule Membrane.PortAudio.Source do
   def_options endpoint_id: [
                 spec: integer | :default,
                 default: :default,
-                description: "PortAudio sound card id"
+                description: """
+                PortAudio device id. Defaults to the default input device.
+
+                You can list available devices with `mix pa_devices` or
+                `Membrane.PortAudio.print_devices/0`.
+                """
               ],
               portaudio_buffer_size: [
                 spec: pos_integer,
