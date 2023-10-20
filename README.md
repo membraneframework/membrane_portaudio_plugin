@@ -16,6 +16,8 @@ Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 This package depends on the [PortAudio](http://portaudio.com/) library. The precompiled build will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
 
+The `mix pa_devices` task prints available audio devices and their IDs, which you can pass to the `Membrane.PortAudio.Source` or `Membrane.PortAudio.Sink`.
+
 ### Manual instalation of dependencies
 #### Ubuntu
 
