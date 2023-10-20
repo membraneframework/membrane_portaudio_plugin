@@ -40,7 +40,7 @@ defmodule Membrane.PortAudio.Mixfile do
       {:membrane_common_c, "~> 0.15.0"},
       {:bunch, "~> 1.5"},
       {:membrane_raw_audio_format, "~> 0.11.0"},
-      {:bundlex, "~> 1.2"},
+      {:bundlex, path: "../bundlex", override: true},
       # Testing
       {:mockery, "~> 2.1", runtime: false},
       # Development

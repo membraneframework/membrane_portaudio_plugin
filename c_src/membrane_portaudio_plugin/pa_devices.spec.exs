@@ -1,3 +1,3 @@
 module Membrane.PortAudio.Devices
 
-spec list() :: :ok
+spec list(alsa_config_dir :: string) :: :ok

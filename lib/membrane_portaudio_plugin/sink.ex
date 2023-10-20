@@ -75,6 +75,8 @@ defmodule Membrane.PortAudio.Sink do
       latency: latency
     } = state
 
+    alsa_config_dir = "#{:code.priv_dir(:membrane_portaudio_plugin)}/alsa"
+
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
     with {:ok, {latency_ms, native}} <-
@@ -87,7 +89,8 @@ defmodule Membrane.PortAudio.Sink do
              format.sample_format,
              ringbuffer_size,
              pa_buffer_size,
-             latency
+             latency,
+             alsa_config_dir
            ]) do
       Membrane.ResourceGuard.register(ctx.resource_guard, fn ->
         SyncExecutor.apply(Native, :destroy, native)

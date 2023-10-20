@@ -87,6 +87,8 @@ defmodule Membrane.PortAudio.Source do
       sample_rate: sample_rate
     } = state
 
+    alsa_config_dir = "#{:code.priv_dir(:membrane_portaudio_plugin)}/alsa"
+
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
 
     with {:ok, native, channels, sample_rate} <-
@@ -97,7 +99,8 @@ defmodule Membrane.PortAudio.Source do
              latency,
              sample_format,
              channels || 0,
-             sample_rate || -1
+             sample_rate || -1,
+             alsa_config_dir
            ]) do
       Membrane.ResourceGuard.register(
         ctx.resource_guard,

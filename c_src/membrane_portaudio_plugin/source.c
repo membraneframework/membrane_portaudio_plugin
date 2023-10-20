@@ -44,8 +44,10 @@ static int callback(const void *input_buffer, void *_output_buffer,
 
 UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
                    int pa_buffer_size, char *latency, char *sample_format_str,
-                   int channels, int sample_rate_int) {
+                   int channels, int sample_rate_int, char *alsa_config_dir) {
   MEMBRANE_DEBUG(env, "Initializing");
+
+  setenv("ALSA_CONFIG_DIR", alsa_config_dir, 1);
 
   SourceState *state = unifex_alloc_state(env);
   state->is_content_destroyed = 0;

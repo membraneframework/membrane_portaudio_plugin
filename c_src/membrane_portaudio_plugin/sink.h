@@ -8,6 +8,7 @@
 #include <portaudio.h>
 #pragma GCC diagnostic pop
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "pa_helper.h"

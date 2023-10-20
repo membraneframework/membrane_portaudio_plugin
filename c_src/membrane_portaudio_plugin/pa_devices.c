@@ -1,6 +1,9 @@
 #include "pa_devices.h"
 
-UNIFEX_TERM list(UnifexEnv *env) {
+UNIFEX_TERM list(UnifexEnv *env, char *alsa_config_dir) {
+
+  setenv("ALSA_CONFIG_DIR", alsa_config_dir, 1);
+
   Pa_Initialize();
   int numDevices = Pa_GetDeviceCount();
   if (numDevices < 0) {

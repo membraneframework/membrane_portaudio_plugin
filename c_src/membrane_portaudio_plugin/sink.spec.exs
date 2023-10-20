@@ -13,7 +13,8 @@ spec create(
        sample_format :: atom,
        ringbuffer_size :: int,
        pa_buffer_size :: int,
-       latency :: atom
+       latency :: atom,
+       alsa_config_dir :: string
      ) :: {:ok :: label, {latency_ms :: int, state}} | {:error :: label, reason :: atom}
 
 spec write_data(payload, state) :: (:ok :: label) | {:error :: label, :overrun :: label}

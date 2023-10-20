@@ -60,8 +60,10 @@ static int callback(const void *_input_buffer, void *output_buffer,
 UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
                    UnifexPid membrane_clock, int endpoint_id, int sample_rate,
                    int channels, char *sample_format_str, int ringbuffer_size,
-                   int pa_buffer_size, char *latency) {
+                   int pa_buffer_size, char *latency, char *alsa_config_dir) {
   MEMBRANE_DEBUG(env, "initializing");
+
+  setenv("ALSA_CONFIG_DIR", alsa_config_dir, 1);
 
   char *error;
   SinkState *state = NULL;

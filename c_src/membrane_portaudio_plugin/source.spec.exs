@@ -11,7 +11,8 @@ spec create(
        latency :: atom,
        sample_format :: atom,
        max_channels :: int,
-       sample_rate :: int
+       sample_rate :: int,
+       alsa_config_dir :: string
      ) ::
        {:ok :: label, state, channels :: int, sample_rate :: int}
        | {:error :: label, reason :: atom}
