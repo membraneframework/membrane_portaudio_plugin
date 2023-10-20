@@ -33,21 +33,24 @@ defmodule Membrane.PortAudio.BundlexProject do
         deps: [membrane_common_c: [:membrane, :membrane_ringbuffer], unifex: :unifex],
         sources: ["sink.c", "pa_helper.c"],
         os_deps: [get_portaudio()],
-        preprocessor: Unifex
+        preprocessor: Unifex,
+        compiler_flags: ["-std=gnu11"]
       ],
       source: [
         interface: :nif,
         deps: [membrane_common_c: :membrane, unifex: :unifex],
         sources: ["source.c", "pa_helper.c"],
         os_deps: [get_portaudio()],
-        preprocessor: Unifex
+        preprocessor: Unifex,
+        compiler_flags: ["-std=gnu11"]
       ],
       pa_devices: [
         interface: :nif,
         deps: [unifex: :unifex],
         sources: ["pa_devices.c"],
         os_deps: [get_portaudio()],
-        preprocessor: Unifex
+        preprocessor: Unifex,
+        compiler_flags: ["-std=gnu11"]
       ]
     ]
   end
