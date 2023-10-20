@@ -16,6 +16,9 @@ defmodule Membrane.PortAudio.BundlexProject do
         {[{:precompiled, "#{url_prefix}_macos_intel.tar.gz"}, :pkg_config], "portaudio"}
 
       %{architecture: "aarch64", os: "darwin" <> _rest_of_os_name} ->
+        {:precompiled, "#{url_prefix}_macos_arm.tar.gz"}
+
+      %{architecture: "aarch64", os: "darwin" <> _rest_of_os_name} ->
         {[:pkg_config], "portaudio-2.0"}
 
       _other ->
