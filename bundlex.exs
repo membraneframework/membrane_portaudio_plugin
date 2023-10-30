@@ -27,25 +27,37 @@ defmodule Membrane.PortAudio.BundlexProject do
     [
       sink: [
         interface: :nif,
-        deps: [membrane_common_c: [:membrane, :membrane_ringbuffer], unifex: :unifex],
+        deps: [membrane_common_c: [:membrane, :membrane_ringbuffer]],
         sources: ["sink.c", "pa_helper.c"],
         os_deps: [get_portaudio()],
         preprocessor: Unifex
       ],
       source: [
         interface: :nif,
-        deps: [membrane_common_c: :membrane, unifex: :unifex],
+        deps: [membrane_common_c: :membrane],
         sources: ["source.c", "pa_helper.c"],
         os_deps: [get_portaudio()],
         preprocessor: Unifex
       ],
       pa_devices: [
         interface: :nif,
-        deps: [unifex: :unifex],
         sources: ["pa_devices.c"],
         os_deps: [get_portaudio()],
         preprocessor: Unifex
       ]
+    ] ++ os_specific(Bundlex.get_target())
+  end
+
+  defp os_specific(%{os: "darwin" <> _rest}) do
+    [
+      osx_permissions: [
+        interface: :nif,
+        sources: ["osx_permissions.m"],
+        libs: ["objc"],
+        linker_flags: ["-framework AVFoundation"]
+      ]
     ]
   end
+
+  defp os_specific(_target), do: []
 end
