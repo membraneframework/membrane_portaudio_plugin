@@ -17,7 +17,7 @@ defmodule Membrane.PortAudio.Source do
 
   # TODO Add support for different formats
   def_output_pad :output,
-    mode: :push,
+    flow_control: :push,
     accepted_format: %RawAudio{sample_format: format} when format in @sample_formats
 
   def_options endpoint_id: [

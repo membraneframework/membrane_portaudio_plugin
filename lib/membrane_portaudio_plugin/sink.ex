@@ -22,6 +22,7 @@ defmodule Membrane.PortAudio.Sink do
 
   def_input_pad :input,
     demand_unit: :bytes,
+    flow_control: :manual,
     accepted_format:
       %RawAudio{sample_format: format} when format in [:f32le, :s32le, :s24le, :s16le, :s8, :u8]
 
@@ -110,7 +111,7 @@ defmodule Membrane.PortAudio.Sink do
   end
 
   @impl true
-  def handle_write(:input, %Buffer{payload: payload}, _ctx, %{native: native} = state) do
+  def handle_buffer(:input, %Buffer{payload: payload}, _ctx, %{native: native} = state) do
     mockable(Native).write_data(payload, native)
     {[], state}
   end
