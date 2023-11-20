@@ -13,13 +13,13 @@ defmodule Membrane.PortAudio.BundlexProject do
 
     case Bundlex.get_target() do
       %{architecture: "x86_64", os: "darwin" <> _rest_of_os_name} ->
-        {[{:precompiled, "#{url_prefix}_macos_intel.tar.gz"}, :pkg_config], "portaudio"}
+        [{:precompiled, "#{url_prefix}_macos_intel.tar.gz"}, {:pkg_config, "portaudio-2.0"}]
 
       %{architecture: "aarch64", os: "darwin" <> _rest_of_os_name} ->
-        {[{:precompiled, "#{url_prefix}_macos_arm.tar.gz"}], "portaudio"}
+        [{:precompiled, "#{url_prefix}_macos_arm.tar.gz"}, {:pkg_config, "portaudio-2.0"}]
 
       _other ->
-        {[:pkg_config], "portaudio"}
+        [{:pkg_config, "portaudio-2.0"}]
     end
   end
 
@@ -29,20 +29,20 @@ defmodule Membrane.PortAudio.BundlexProject do
         interface: :nif,
         deps: [membrane_common_c: [:membrane, :membrane_ringbuffer]],
         sources: ["sink.c", "pa_helper.c"],
-        os_deps: [get_portaudio()],
+        os_deps: [portaudio: get_portaudio()],
         preprocessor: Unifex
       ],
       source: [
         interface: :nif,
         deps: [membrane_common_c: :membrane],
         sources: ["source.c", "pa_helper.c"],
-        os_deps: [get_portaudio()],
+        os_deps: [portaudio: get_portaudio()],
         preprocessor: Unifex
       ],
       pa_devices: [
         interface: :nif,
         sources: ["pa_devices.c"],
-        os_deps: [get_portaudio()],
+        os_deps: [portaudio: get_portaudio()],
         preprocessor: Unifex
       ]
     ] ++ os_specific(Bundlex.get_target())
