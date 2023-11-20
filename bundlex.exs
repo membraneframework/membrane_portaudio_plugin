@@ -19,7 +19,7 @@ defmodule Membrane.PortAudio.BundlexProject do
         [{:precompiled, "#{url_prefix}_macos_arm.tar.gz"}, {:pkg_config, "portaudio-2.0"}]
 
       _other ->
-        [:pkg_config]
+        [{:pkg_config, "portaudio-2.0"}]
     end
   end
 
