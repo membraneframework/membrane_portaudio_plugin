@@ -49,13 +49,13 @@ defmodule Membrane.Portaudio.SinkTest do
     end
   end
 
-  describe "handle_write" do
+  describe "handle_buffer" do
     setup :playing
 
     test "should call portaudio", %{state: state} do
       mock(Native, [write_data: 2], :ok)
       payload = <<1, 2, 3, 4>>
-      assert {[], state} == @module.handle_write(:input, %Buffer{payload: payload}, nil, state)
+      assert {[], state} == @module.handle_buffer(:input, %Buffer{payload: payload}, nil, state)
       %{native: native} = state
       assert_called(Native, :write_data, [^payload, ^native])
     end

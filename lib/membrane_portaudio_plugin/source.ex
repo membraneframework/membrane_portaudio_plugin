@@ -7,7 +7,7 @@ defmodule Membrane.PortAudio.Source do
 
   alias __MODULE__.Native
   alias Membrane.Buffer
-  alias Membrane.PortAudio.SyncExecutor
+  alias Membrane.PortAudio.{OSXPermissions, SyncExecutor}
   alias Membrane.RawAudio
 
   @sample_formats [:u8le, :s8le, :s16le, :s24le, :s32le, :f32le]
@@ -17,7 +17,7 @@ defmodule Membrane.PortAudio.Source do
 
   # TODO Add support for different formats
   def_output_pad :output,
-    mode: :push,
+    flow_control: :push,
     accepted_format: %RawAudio{sample_format: format} when format in @sample_formats
 
   def_options endpoint_id: [
@@ -68,6 +68,8 @@ defmodule Membrane.PortAudio.Source do
 
   @impl true
   def handle_init(_ctx, %__MODULE__{} = options) do
+    if Code.ensure_loaded?(OSXPermissions), do: apply(OSXPermissions, :request_mic, [])
+
     {[],
      options
      |> Map.from_struct()

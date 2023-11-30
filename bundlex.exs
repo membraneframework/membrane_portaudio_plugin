@@ -12,17 +12,17 @@ defmodule Membrane.PortAudio.BundlexProject do
       "https://github.com/membraneframework-precompiled/precompiled_portaudio/releases/latest/download/portaudio"
 
     case Bundlex.get_target() do
-      %{os: "linux"} -> 
-        {[{:precompiled, "#{url_prefix}_linux.tar.gz"}], "portaudio"}
+      %{os: "linux"} ->
+        [{:precompiled, "#{url_prefix}_linux.tar.gz"}, {:pkg_config, "portaudio-2.0"}]
 
       %{architecture: "x86_64", os: "darwin" <> _rest_of_os_name} ->
-        {[{:precompiled, "#{url_prefix}_macos_intel.tar.gz"}, :pkg_config], "portaudio"}
+        [{:precompiled, "#{url_prefix}_macos_intel.tar.gz"}, {:pkg_config, "portaudio-2.0"}]
 
       %{architecture: "aarch64", os: "darwin" <> _rest_of_os_name} ->
-        {[:pkg_config], "portaudio-2.0"}
+        [{:precompiled, "#{url_prefix}_macos_arm.tar.gz"}, {:pkg_config, "portaudio-2.0"}]
 
       _other ->
-        {[:pkg_config], "portaudio"}
+        [{:pkg_config, "portaudio-2.0"}]
     end
   end
 
@@ -30,28 +30,37 @@ defmodule Membrane.PortAudio.BundlexProject do
     [
       sink: [
         interface: :nif,
-        deps: [membrane_common_c: [:membrane, :membrane_ringbuffer], unifex: :unifex],
+        deps: [membrane_common_c: [:membrane, :membrane_ringbuffer]],
         sources: ["sink.c", "pa_helper.c"],
-        os_deps: [get_portaudio()],
-        preprocessor: Unifex,
-        compiler_flags: ["-std=gnu11"]
+        os_deps: [portaudio: get_portaudio()],
+        preprocessor: Unifex
       ],
       source: [
         interface: :nif,
-        deps: [membrane_common_c: :membrane, unifex: :unifex],
+        deps: [membrane_common_c: :membrane],
         sources: ["source.c", "pa_helper.c"],
-        os_deps: [get_portaudio()],
-        preprocessor: Unifex,
-        compiler_flags: ["-std=gnu11"]
+        os_deps: [portaudio: get_portaudio()],
+        preprocessor: Unifex
       ],
       pa_devices: [
         interface: :nif,
-        deps: [unifex: :unifex],
         sources: ["pa_devices.c"],
-        os_deps: [get_portaudio()],
-        preprocessor: Unifex,
-        compiler_flags: ["-std=gnu11"]
+        os_deps: [portaudio: get_portaudio()],
+        preprocessor: Unifex
+      ]
+    ] ++ os_specific(Bundlex.get_target())
+  end
+
+  defp os_specific(%{os: "darwin" <> _rest}) do
+    [
+      osx_permissions: [
+        interface: :nif,
+        sources: ["osx_permissions.m"],
+        libs: ["objc"],
+        linker_flags: ["-framework AVFoundation"]
       ]
     ]
   end
+
+  defp os_specific(_target), do: []
 end
