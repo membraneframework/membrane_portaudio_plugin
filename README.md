@@ -16,17 +16,23 @@ Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 This package depends on the [PortAudio](http://portaudio.com/) library. The precompiled build will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
 
-The `mix pa_devices` task prints available audio devices and their IDs, which you can pass to the `Membrane.PortAudio.Source` or `Membrane.PortAudio.Sink`.
+When running on linux [ALSA (alsa-lib)](https://github.com/alsa-project/alsa-lib) needs to be present on the system for the precompiled build to work. In most cases it's installed by default, however in case it's not present you can install it manually.
 
 ### Manual instalation of dependencies
 #### Ubuntu
 
+```bash
+sudo apt-get install alsa
+```
 ```bash
 sudo apt-get install portaudio19-dev
 ```
 
 #### Arch/Manjaro
 
+```bash
+pacman -S alsa-lib
+```
 ```bash
 pacman -S portaudio
 ```
@@ -36,6 +42,10 @@ pacman -S portaudio
 ```bash
 brew install portaudio
 ```
+
+## Tasks
+
+The `mix pa_devices` task prints available audio devices and their IDs, which you can pass to the `Membrane.PortAudio.Source` or `Membrane.PortAudio.Sink`.
 
 ## Sample usage
 
