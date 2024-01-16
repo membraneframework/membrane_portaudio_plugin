@@ -1,4 +1,4 @@
-if Bundlex.get_target().os |> String.starts_with?("darwin") do
+if Bundlex.platform() == :macosx do
   defmodule Membrane.PortAudio.OSXPermissions do
     @moduledoc false
 

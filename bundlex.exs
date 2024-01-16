@@ -44,10 +44,10 @@ defmodule Membrane.PortAudio.BundlexProject do
         ],
         preprocessor: Unifex
       ]
-    ] ++ os_specific(Bundlex.get_target())
+    ] ++ os_specific(Bundlex.platform())
   end
 
-  defp os_specific(%{os: "darwin" <> _rest}) do
+  defp os_specific(:macosx) do
     [
       osx_permissions: [
         interface: :nif,
