@@ -76,4 +76,9 @@ defmodule Membrane.Portaudio.SourceTest do
       assert_receive({:portaudio_payload, _payload}, 1000)
     end
   end
+
+  test "NIF is loaded properly" do
+    assert {:module, Membrane.PortAudio.Source.Native.Nif} =
+             Code.ensure_loaded(Membrane.PortAudio.Source.Native.Nif)
+  end
 end

@@ -87,4 +87,9 @@ defmodule Membrane.Portaudio.SinkTest do
       assert initial_demand_size == 4 * state.ringbuffer_size
     end
   end
+
+  test "NIF is loaded properly" do
+    assert {:module, Membrane.PortAudio.Sink.Native.Nif} =
+             Code.ensure_loaded(Membrane.PortAudio.Sink.Native.Nif)
+  end
 end
