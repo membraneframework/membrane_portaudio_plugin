@@ -89,7 +89,6 @@ defmodule Membrane.Portaudio.SinkTest do
   end
 
   test "NIF is loaded properly" do
-    assert {:module, Membrane.PortAudio.Sink.Native.Nif} =
-             Code.ensure_loaded(Membrane.PortAudio.Sink.Native.Nif)
+    assert Code.ensure_loaded?(Membrane.PortAudio.Sink.Native.Nif)
   end
 end
