@@ -21,7 +21,7 @@ defmodule Membrane.PortAudio.Source do
     accepted_format: %RawAudio{sample_format: format} when format in @sample_formats
 
   def_options endpoint_id: [
-                spec: integer | :default,
+                spec: integer() | :default,
                 default: :default,
                 description: """
                 PortAudio device id. Defaults to the default input device.
@@ -31,7 +31,7 @@ defmodule Membrane.PortAudio.Source do
                 """
               ],
               portaudio_buffer_size: [
-                spec: pos_integer,
+                spec: pos_integer(),
                 default: 256,
                 description: "Size of the PortAudio buffer (in frames)"
               ],
@@ -86,7 +86,8 @@ defmodule Membrane.PortAudio.Source do
       latency: latency,
       sample_format: sample_format,
       channels: channels,
-      sample_rate: sample_rate
+      sample_rate: sample_rate,
+      init_time: nil
     } = state
 
     endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
@@ -118,7 +119,11 @@ defmodule Membrane.PortAudio.Source do
 
   @impl true
   def handle_info({:portaudio_payload, payload}, %{playback: :playing}, state) do
-    {[buffer: {:output, %Buffer{payload: payload}}], state}
+    time = Membrane.Time.monotonic_time()
+    init_time = state.init_time || time
+    buffer = %Buffer{payload: payload, pts: time - init_time}
+
+    {[buffer: {:output, buffer}], %{state | init_time: init_time}}
   end
 
   @impl true

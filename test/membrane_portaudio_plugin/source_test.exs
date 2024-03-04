@@ -19,7 +19,8 @@ defmodule Membrane.Portaudio.SourceTest do
       channels: 0,
       sample_rate: nil,
       latency: :high,
-      native: nil
+      native: nil,
+      init_time: nil
     }
 
     %{state: state}
