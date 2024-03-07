@@ -4,8 +4,8 @@
 
 char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
               PaStream **stream, void *state, PaSampleFormat sample_format,
-              double *sample_rate, int *channels, char *latency_str, int *latency_ms,
-              int pa_buffer_size, PaDeviceIndex endpoint_id,
+              double *sample_rate, int *channels, char *latency_str,
+              int *latency_ms, int pa_buffer_size, PaDeviceIndex device_id,
               PaStreamCallback *callback) {
   char *ret_error = NULL;
   PaError pa_error;
@@ -18,15 +18,15 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
     goto error;
   }
 
-  if (endpoint_id == paNoDevice) {
-    endpoint_id =
+  if (device_id == paNoDevice) {
+    device_id =
         direction ? Pa_GetDefaultOutputDevice() : Pa_GetDefaultInputDevice();
   }
 
-  const PaDeviceInfo *device_info = Pa_GetDeviceInfo(endpoint_id);
+  const PaDeviceInfo *device_info = Pa_GetDeviceInfo(device_id);
   if (!device_info) {
-    MEMBRANE_WARN(env, "Invalid endpoint id: %d", endpoint_id);
-    ret_error = "invalid_endpoint_id";
+    MEMBRANE_WARN(env, "Invalid endpoint id: %d", device_id);
+    ret_error = "invalid_device_id";
     goto error;
   }
 
@@ -40,10 +40,10 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
     ret_error = "invalid_latency";
     goto error;
   }
-  
-  switch(direction) {
+
+  switch (direction) {
     case STREAM_DIRECTION_IN:
-      if(*channels == 0) {
+      if (*channels == 0) {
         *channels = device_info->maxInputChannels;
       } else if (*channels > device_info->maxInputChannels) {
         return "Device doesn't support that many input channels";
@@ -59,19 +59,18 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
       break;
   }
 
-  if(*sample_rate <= 0.0) {
-    switch(direction) {
+  if (*sample_rate <= 0.0) {
+    switch (direction) {
       case STREAM_DIRECTION_IN:
         *sample_rate = device_info->defaultSampleRate;
         break;
-        
+
       case STREAM_DIRECTION_OUT:
-       return "Invalid sample rate value";
+        return "Invalid sample rate value";
     }
   }
 
-
-  PaStreamParameters stream_params = {.device = endpoint_id,
+  PaStreamParameters stream_params = {.device = device_id,
                                       .channelCount = *channels,
                                       .sampleFormat = sample_format,
                                       .suggestedLatency = latency,
@@ -87,7 +86,7 @@ char *init_pa(UnifexEnv *env, char *log_tag, StreamDirection direction,
   pa_error =
       Pa_OpenStream(stream, input_stream_params_ptr, output_stream_params_ptr,
                     *sample_rate, pa_buffer_size, paNoFlag, callback,
-                    state // passed to the callback
+                    state  // passed to the callback
       );
 
   if (pa_error != paNoError) {
@@ -129,8 +128,7 @@ char *destroy_pa(UnifexEnv *env, char *log_tag, PaStream *stream) {
       if (pa_error != paNoError) {
         MEMBRANE_WARN(env, "Pa_StopStream: error = %d (%s)", pa_error,
                       Pa_GetErrorText(pa_error));
-        if (!error)
-          error = "pa_stop_stream";
+        if (!error) error = "pa_stop_stream";
       }
     }
 
@@ -138,8 +136,7 @@ char *destroy_pa(UnifexEnv *env, char *log_tag, PaStream *stream) {
     if (pa_error != paNoError && pa_error != paNotInitialized) {
       MEMBRANE_WARN(env, "Pa_CloseStream: error = %d (%s)", pa_error,
                     Pa_GetErrorText(pa_error));
-      if (!error)
-        error = "pa_close_stream";
+      if (!error) error = "pa_close_stream";
     }
   }
 
@@ -152,8 +149,8 @@ char *destroy_pa(UnifexEnv *env, char *log_tag, PaStream *stream) {
   return error;
 }
 
-PaSampleFormat string_to_PaSampleFormat(char* format) {
-  if(strcmp(format, "f32le") == 0) {
+PaSampleFormat string_to_PaSampleFormat(char *format) {
+  if (strcmp(format, "f32le") == 0) {
     return paFloat32;
   } else if (strcmp(format, "s32le") == 0) {
     return paInt32;
@@ -166,7 +163,7 @@ PaSampleFormat string_to_PaSampleFormat(char* format) {
   } else if (strcmp(format, "u8") == 0) {
     return paUInt8;
   }
-  
+
   return UNSUPPORTED_SAMPLE_FORMAT;
 }
 
@@ -185,7 +182,7 @@ int sample_size(PaSampleFormat sample_format) {
     case paInt8:
     case paUInt8:
       return 1;
-      
+
     default:
       return 0;
   }

@@ -7,7 +7,7 @@ state_type "SinkState"
 spec create(
        demand_handler :: pid,
        clock :: pid,
-       endpoint_id :: int,
+       device_id :: int,
        sample_rate :: int,
        channels :: int,
        sample_format :: atom,
