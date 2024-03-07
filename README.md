@@ -11,7 +11,7 @@ The plugin that captures and plays sound using the multiplatform PortAudio libra
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-	{:membrane_portaudio_plugin, "~> 0.18.4"}
+	{:membrane_portaudio_plugin, "~> 0.18.5"}
 ```
 
 This package depends on the [PortAudio](http://portaudio.com/) library. The precompiled build will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
@@ -87,6 +87,7 @@ defmodule Membrane.ReleaseTest.Pipeline do
 end
 ```
 
+_***Note***: the endpoint_id option was recently renamed to device_id to be more in line with PortAudio's API._
 ## Testing
 
 Tests contain some cases that use PortAudio stuff instead of mocking. Such cases require the presence of at least one input and output sound card, thus they are disabled by default. To enable them, run
