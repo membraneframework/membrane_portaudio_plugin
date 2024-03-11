@@ -4,6 +4,7 @@ defmodule Membrane.PortAudio.Source do
   """
 
   use Membrane.Source
+
   require Membrane.Logger
 
   alias __MODULE__.Native
@@ -78,7 +79,7 @@ defmodule Membrane.PortAudio.Source do
   @impl true
   def handle_init(ctx, %__MODULE__{endpoint_id: endpoint_id} = options)
       when endpoint_id != nil do
-    _ = Membrane.Logger.warning("endpoint_id has been renamed to device_id")
+    _warning = Membrane.Logger.warning("endpoint_id has been renamed to device_id")
     handle_init(ctx, Map.delete(options, :endpoint_id))
   end
 
