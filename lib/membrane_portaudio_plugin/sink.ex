@@ -4,6 +4,7 @@ defmodule Membrane.PortAudio.Sink do
   """
 
   use Membrane.Sink
+  require Membrane.Logger
 
   import Mockery.Macro
 
@@ -37,6 +38,14 @@ defmodule Membrane.PortAudio.Sink do
                 `Membrane.PortAudio.print_devices/0`.
                 """
               ],
+              endpoint_id: [
+                type: nil,
+                spec: nil,
+                default: nil,
+                description: """
+                Deprecated. Please use device_id instead.
+                """
+              ],
               ringbuffer_size: [
                 type: :integer,
                 spec: pos_integer,
@@ -55,6 +64,13 @@ defmodule Membrane.PortAudio.Sink do
                 default: :high,
                 description: "Latency of the output device"
               ]
+
+  @impl true
+  def handle_init(ctx, %__MODULE__{endpoint_id: endpoint_id} = options)
+      when endpoint_id != nil do
+    _ = Membrane.Logger.warning("endpoint_id has been renamed to device_id")
+    handle_init(ctx, Map.delete(options, :endpoint_id))
+  end
 
   @impl true
   def handle_init(_ctx, %__MODULE__{} = options) do
