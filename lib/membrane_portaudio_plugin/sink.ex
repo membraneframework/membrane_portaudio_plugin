@@ -69,7 +69,7 @@ defmodule Membrane.PortAudio.Sink do
   @impl true
   def handle_init(ctx, %__MODULE__{endpoint_id: endpoint_id} = options)
       when endpoint_id != nil do
-    _warning = Membrane.Logger.warning("endpoint_id has been renamed to device_id")
+    Membrane.Logger.warning("endpoint_id option has been renamed to device_id")
     handle_init(ctx, Map.delete(options, :endpoint_id))
   end
 
