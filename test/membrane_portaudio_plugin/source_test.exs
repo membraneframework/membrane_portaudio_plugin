@@ -13,7 +13,7 @@ defmodule Membrane.Portaudio.SourceTest do
 
   defp state(_ctx) do
     state = %{
-      endpoint_id: :default,
+      device_id: :default,
       portaudio_buffer_size: 256,
       sample_format: :s16le,
       channels: 0,

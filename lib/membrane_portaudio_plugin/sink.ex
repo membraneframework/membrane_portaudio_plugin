@@ -7,6 +7,8 @@ defmodule Membrane.PortAudio.Sink do
 
   import Mockery.Macro
 
+  require Membrane.Logger
+
   alias __MODULE__.Native
   alias Membrane.Buffer
   alias Membrane.PortAudio.SyncExecutor
@@ -26,7 +28,7 @@ defmodule Membrane.PortAudio.Sink do
     accepted_format:
       %RawAudio{sample_format: format} when format in [:f32le, :s32le, :s24le, :s16le, :s8, :u8]
 
-  def_options endpoint_id: [
+  def_options device_id: [
                 type: :integer,
                 spec: integer | :default,
                 default: :default,
@@ -35,6 +37,14 @@ defmodule Membrane.PortAudio.Sink do
 
                 You can list available devices with `mix pa_devices` or
                 `Membrane.PortAudio.print_devices/0`.
+                """
+              ],
+              endpoint_id: [
+                type: nil,
+                spec: nil,
+                default: nil,
+                description: """
+                Deprecated. Please use device_id instead.
                 """
               ],
               ringbuffer_size: [
@@ -57,6 +67,13 @@ defmodule Membrane.PortAudio.Sink do
               ]
 
   @impl true
+  def handle_init(ctx, %__MODULE__{endpoint_id: endpoint_id} = options)
+      when endpoint_id != nil do
+    Membrane.Logger.warning("endpoint_id option has been renamed to device_id")
+    handle_init(ctx, Map.delete(options, :endpoint_id))
+  end
+
+  @impl true
   def handle_init(_ctx, %__MODULE__{} = options) do
     {[],
      options
@@ -70,19 +87,19 @@ defmodule Membrane.PortAudio.Sink do
   @impl true
   def handle_stream_format(:input, %Membrane.RawAudio{} = format, ctx, state) do
     %{
-      endpoint_id: endpoint_id,
+      device_id: device_id,
       ringbuffer_size: ringbuffer_size,
       portaudio_buffer_size: pa_buffer_size,
       latency: latency
     } = state
 
-    endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
+    device_id = if device_id == :default, do: @pa_no_device, else: device_id
 
     with {:ok, {latency_ms, native}} <-
            SyncExecutor.apply(Native, :create, [
              self(),
              ctx.clock,
-             endpoint_id,
+             device_id,
              format.sample_rate,
              format.channels,
              format.sample_format,

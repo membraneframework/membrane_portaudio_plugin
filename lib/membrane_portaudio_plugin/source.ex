@@ -5,6 +5,8 @@ defmodule Membrane.PortAudio.Source do
 
   use Membrane.Source
 
+  require Membrane.Logger
+
   alias __MODULE__.Native
   alias Membrane.Buffer
   alias Membrane.PortAudio.{OSXPermissions, SyncExecutor}
@@ -20,7 +22,7 @@ defmodule Membrane.PortAudio.Source do
     flow_control: :push,
     accepted_format: %RawAudio{sample_format: format} when format in @sample_formats
 
-  def_options endpoint_id: [
+  def_options device_id: [
                 spec: integer() | :default,
                 default: :default,
                 description: """
@@ -28,6 +30,14 @@ defmodule Membrane.PortAudio.Source do
 
                 You can list available devices with `mix pa_devices` or
                 `Membrane.PortAudio.print_devices/0`.
+                """
+              ],
+              endpoint_id: [
+                type: nil,
+                spec: nil,
+                default: nil,
+                description: """
+                Deprecated. Please use device_id instead.
                 """
               ],
               portaudio_buffer_size: [
@@ -67,6 +77,13 @@ defmodule Membrane.PortAudio.Source do
               ]
 
   @impl true
+  def handle_init(ctx, %__MODULE__{endpoint_id: endpoint_id} = options)
+      when endpoint_id != nil do
+    Membrane.Logger.warning("endpoint_id option has been renamed to device_id")
+    handle_init(ctx, Map.delete(options, :endpoint_id))
+  end
+
+  @impl true
   def handle_init(_ctx, %__MODULE__{} = options) do
     if Code.ensure_loaded?(OSXPermissions), do: apply(OSXPermissions, :request_mic, [])
 
@@ -81,7 +98,7 @@ defmodule Membrane.PortAudio.Source do
   @impl true
   def handle_playing(ctx, state) do
     %{
-      endpoint_id: endpoint_id,
+      device_id: device_id,
       portaudio_buffer_size: pa_buffer_size,
       latency: latency,
       sample_format: sample_format,
@@ -90,12 +107,12 @@ defmodule Membrane.PortAudio.Source do
       init_time: nil
     } = state
 
-    endpoint_id = if endpoint_id == :default, do: @pa_no_device, else: endpoint_id
+    device_id = if device_id == :default, do: @pa_no_device, else: device_id
 
     with {:ok, native, channels, sample_rate} <-
            SyncExecutor.apply(Native, :create, [
              self(),
-             endpoint_id,
+             device_id,
              pa_buffer_size,
              latency,
              sample_format,

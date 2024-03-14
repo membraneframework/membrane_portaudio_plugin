@@ -3,8 +3,7 @@
 #include <membrane/log.h>
 
 void handle_destroy_state(UnifexEnv *env, SourceState *state) {
-  if (state->is_content_destroyed)
-    return;
+  if (state->is_content_destroyed) return;
   SourceState *temp_state = unifex_alloc_state(env);
   memcpy(temp_state, state, sizeof(SourceState));
 
@@ -42,7 +41,7 @@ static int callback(const void *input_buffer, void *_output_buffer,
   return paContinue;
 }
 
-UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
+UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int device_id,
                    int pa_buffer_size, char *latency, char *sample_format_str,
                    int channels, int sample_rate_int) {
   MEMBRANE_DEBUG(env, "Initializing");
@@ -59,7 +58,7 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid destination, int endpoint_id,
   char *error =
       init_pa(env, MEMBRANE_LOG_TAG, STREAM_DIRECTION_IN, &(state->stream),
               state, sample_format, &sample_rate, &channels, latency,
-              &_latency_ms, pa_buffer_size, endpoint_id, callback);
+              &_latency_ms, pa_buffer_size, device_id, callback);
 
   state->channels = channels;
   state->frame_size = channels * sample_size(sample_format);

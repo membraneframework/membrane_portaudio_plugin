@@ -15,7 +15,7 @@ defmodule Membrane.Portaudio.SinkTest do
   defp state(ctx) do
     {_actions, state} =
       @module.handle_init(ctx, %Sink{
-        endpoint_id: :default,
+        device_id: :default,
         ringbuffer_size: 4096,
         portaudio_buffer_size: 256,
         latency: :high

@@ -5,8 +5,7 @@
 #define BUFFERS_PER_TICK 100
 
 void handle_destroy_state(UnifexEnv *env, SinkState *state) {
-  if (state->is_content_destroyed)
-    return;
+  if (state->is_content_destroyed) return;
   SinkState *temp_state = unifex_alloc_state(env);
   memcpy(temp_state, state, sizeof(SinkState));
 
@@ -58,7 +57,7 @@ static int callback(const void *_input_buffer, void *output_buffer,
 }
 
 UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
-                   UnifexPid membrane_clock, int endpoint_id, int sample_rate,
+                   UnifexPid membrane_clock, int device_id, int sample_rate,
                    int channels, char *sample_format_str, int ringbuffer_size,
                    int pa_buffer_size, char *latency) {
   MEMBRANE_DEBUG(env, "initializing");
@@ -103,7 +102,7 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
 
   error = init_pa(env, MEMBRANE_LOG_TAG, STREAM_DIRECTION_OUT, &(state->stream),
                   state, sample_format, &sample_rate_double, &channels, latency,
-                  &latency_ms, pa_buffer_size, endpoint_id, callback);
+                  &latency_ms, pa_buffer_size, device_id, callback);
 
   if (error) {
     goto error;
