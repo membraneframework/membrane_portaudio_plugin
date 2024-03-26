@@ -91,7 +91,8 @@ defmodule Membrane.PortAudio.Source do
      options
      |> Map.from_struct()
      |> Map.merge(%{
-       native: nil
+       native: nil,
+       init_time: nil
      })}
   end
 
@@ -103,8 +104,7 @@ defmodule Membrane.PortAudio.Source do
       latency: latency,
       sample_format: sample_format,
       channels: channels,
-      sample_rate: sample_rate,
-      init_time: nil
+      sample_rate: sample_rate
     } = state
 
     device_id = if device_id == :default, do: @pa_no_device, else: device_id
