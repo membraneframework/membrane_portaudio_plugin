@@ -40,6 +40,7 @@ UNIFEX_TERM list(UnifexEnv *env)
       devices[i].name = names[i];
       devices[i].max_output_channels = device_info->maxOutputChannels;
       devices[i].max_input_channels = device_info->maxInputChannels;
+      devices[i].is_default = i == default_input_id || i == default_output_id;
     }
   }
 

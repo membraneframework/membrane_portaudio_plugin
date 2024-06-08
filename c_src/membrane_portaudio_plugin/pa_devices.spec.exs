@@ -5,7 +5,8 @@ type(
     id: int,
     name: string,
     max_input_channels: int,
-    max_output_channels: int
+    max_output_channels: int,
+    is_default: bool
   }
 )
 
