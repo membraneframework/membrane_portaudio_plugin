@@ -11,7 +11,7 @@ The plugin that captures and plays sound using the multiplatform PortAudio libra
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-	{:membrane_portaudio_plugin, "~> 0.19.2"}
+{:membrane_portaudio_plugin, "~> 0.19.2"}
 ```
 
 This package depends on the [PortAudio](http://portaudio.com/) library. The precompiled build will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
@@ -52,7 +52,7 @@ The `mix pa_devices` task prints available audio devices and their IDs, which yo
 The pipeline below should play a raw file to a default output device.
 
 ```elixir
-defmodule Membrane.ReleaseTest.Pipeline do
+defmodule Example.Pipeline do
   use Membrane.Pipeline
 
   alias Membrane.PortAudio
@@ -71,7 +71,7 @@ end
 And this one should forward sound from the default input to the default output. DO NOT USE WITHOUT HEADPHONES to avoid audio feedback.
 
 ```elixir
-defmodule Membrane.ReleaseTest.Pipeline do
+defmodule Example.Pipeline do
   use Membrane.Pipeline
 
   alias Membrane.PortAudio
@@ -87,7 +87,19 @@ defmodule Membrane.ReleaseTest.Pipeline do
 end
 ```
 
-_***Note***: the endpoint_id option was recently renamed to device_id to be more in line with PortAudio's API._
+### Low latency
+
+To reduce the latency of the sink and/or source, you can:
+- set the `latency` option to `:low` to configure the sound card in the low latency mode,
+- reduce the `portaudio_buffer_size` to make PortAudio produce/consume smaller audio chunks,
+
+for example:
+
+```elixir
+child(:pa_src, %PortAudio.Source{latency: :low, portaudio_buffer_size: 32})
+|> child(:pa_sink, %PortAudio.Sink{latency: :low, portaudio_buffer_size: 32})
+```
+
 ## Testing
 
 Tests contain some cases that use PortAudio stuff instead of mocking. Such cases require the presence of at least one input and output sound card, thus they are disabled by default. To enable them, run
