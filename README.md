@@ -66,6 +66,9 @@ defmodule Example.Pipeline do
     {[spec: structure], %{}}
   end
 end
+
+Membrane.Pipeline.start_link(Example.Pipeline)
+Process.sleep(:infinity)
 ```
 
 And this one should forward sound from the default input to the default output. DO NOT USE WITHOUT HEADPHONES to avoid audio feedback.
@@ -85,6 +88,9 @@ defmodule Example.Pipeline do
     {[spec: structure], %{}}
   end
 end
+
+Membrane.Pipeline.start_link(Example.Pipeline)
+Process.sleep(:infinity)
 ```
 
 ### Low latency
