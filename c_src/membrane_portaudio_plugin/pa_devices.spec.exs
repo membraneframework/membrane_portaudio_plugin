@@ -1,13 +1,15 @@
 module Membrane.PortAudio.Devices
 
 type(
-  device :: %Device{
+  device :: %Membrane.PortAudio.Device{
     id: int,
     name: string,
     max_input_channels: int,
     max_output_channels: int,
-    is_default: bool
+    default_sample_rate: float,
+    default_device: default_device
   }
 )
 
-spec list() :: {:ok :: label, devices :: [device]}
+type(default_device :: false | :input | :output)
+spec list() :: devices :: [device]

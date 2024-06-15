@@ -20,6 +20,8 @@ defmodule Membrane.PortAudio do
   @spec print_devices() :: :ok
   def print_devices() do
     Application.ensure_all_started(:membrane_portaudio_plugin)
+
     __MODULE__.SyncExecutor.apply(__MODULE__.Devices, :list, [])
+    |> IO.inspect()
   end
 end
