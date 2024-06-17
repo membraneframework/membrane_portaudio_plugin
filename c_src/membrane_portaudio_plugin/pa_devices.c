@@ -41,6 +41,7 @@ UNIFEX_TERM list(UnifexEnv *env)
         strcpy(devices[i].name, device_info->name);
       }
 
+      devices[i].id = i;
       devices[i].max_output_channels = device_info->maxOutputChannels;
       devices[i].max_input_channels = device_info->maxInputChannels;
       devices[i].default_sample_rate = device_info->defaultSampleRate;
