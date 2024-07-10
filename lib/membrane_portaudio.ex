@@ -19,9 +19,21 @@ defmodule Membrane.PortAudio do
   """
   @spec print_devices() :: :ok
   def print_devices() do
-    Application.ensure_all_started(:membrane_portaudio_plugin)
+    IO.inspect(list_devices(),
+      pretty: true,
+      limit: :infinity,
+      syntax_colors: IO.ANSI.syntax_colors()
+    )
 
+    :ok
+  end
+
+  @doc """
+  Returns a list of available audio devices.
+  """
+  @spec list_devices() :: [Membrane.PortAudio.Device.t()]
+  def list_devices() do
+    Application.ensure_all_started(:membrane_portaudio_plugin)
     __MODULE__.SyncExecutor.apply(__MODULE__.Devices, :list, [])
-    |> IO.inspect()
   end
 end
