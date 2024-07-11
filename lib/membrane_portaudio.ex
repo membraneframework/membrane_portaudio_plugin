@@ -19,13 +19,9 @@ defmodule Membrane.PortAudio do
   """
   @spec print_devices() :: :ok
   def print_devices() do
-    IO.inspect(list_devices(),
-      pretty: true,
-      limit: :infinity,
-      syntax_colors: IO.ANSI.syntax_colors()
-    )
-
-    :ok
+    list_devices()
+    |> inspect(pretty: true, limit: :infinity, syntax_colors: IO.ANSI.syntax_colors())
+    |> IO.puts()
   end
 
   @doc """

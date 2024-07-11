@@ -129,7 +129,7 @@ defmodule Membrane.PortAudio.Sink do
 
   @impl true
   def handle_buffer(:input, %Buffer{payload: payload}, _ctx, %{native: native} = state) do
-    mockable(Native).write_data(payload, native)
+    apply(mockable(Native), :write_data, [payload, native])
     {[], state}
   end
 end
