@@ -45,7 +45,7 @@ defmodule Membrane.Portaudio.SinkTest do
 
       assert_resource_guard_register(ctx.resource_guard, function, _tag)
       function.()
-      assert_called(Native, :destroy, [^ref])
+      assert_called!(Native, :destroy, [^ref])
     end
   end
 
@@ -57,7 +57,7 @@ defmodule Membrane.Portaudio.SinkTest do
       payload = <<1, 2, 3, 4>>
       assert {[], state} == @module.handle_buffer(:input, %Buffer{payload: payload}, nil, state)
       %{native: native} = state
-      assert_called(Native, :write_data, [^payload, ^native])
+      assert_called!(Native, :write_data, [^payload, ^native])
     end
   end
 
