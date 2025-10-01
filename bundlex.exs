@@ -15,7 +15,10 @@ defmodule Membrane.PortAudio.BundlexProject do
         sources: ["sink.c", "pa_helper.c"],
         os_deps: [
           portaudio: [
-            {:precompiled, Membrane.PrecompiledDependencyProvider.get_dependency_url(:portaudio)},
+            {:precompiled,
+             Membrane.PrecompiledDependencyProvider.get_dependency_url(:portaudio,
+               version: "19.7.0"
+             )},
             {:pkg_config, "portaudio-2.0"}
           ]
         ],
@@ -27,7 +30,10 @@ defmodule Membrane.PortAudio.BundlexProject do
         sources: ["source.c", "pa_helper.c"],
         os_deps: [
           portaudio: [
-            {:precompiled, Membrane.PrecompiledDependencyProvider.get_dependency_url(:portaudio)},
+            {:precompiled,
+             Membrane.PrecompiledDependencyProvider.get_dependency_url(:portaudio,
+               version: "19.7.0"
+             )},
             {:pkg_config, "portaudio-2.0"}
           ]
         ],
@@ -38,7 +44,10 @@ defmodule Membrane.PortAudio.BundlexProject do
         sources: ["pa_devices.c"],
         os_deps: [
           portaudio: [
-            {:precompiled, Membrane.PrecompiledDependencyProvider.get_dependency_url(:portaudio)},
+            {:precompiled,
+             Membrane.PrecompiledDependencyProvider.get_dependency_url(:portaudio,
+               version: "19.7.0"
+             )},
             {:pkg_config, "portaudio-2.0"}
           ]
         ],
