@@ -44,7 +44,7 @@ defmodule Membrane.Portaudio.SourceTest do
 
       assert_resource_guard_register(resource_guard, function, _tag)
       function.()
-      assert_called(Native, :destroy, [^ref])
+      assert_called!(Native, :destroy, [^ref])
     end
   end
 
