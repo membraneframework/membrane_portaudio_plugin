@@ -13,7 +13,10 @@ defmodule Membrane.PortAudio.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       dialyzer: dialyzer(),
-      aliases: [pa_devices: "eval 'Membrane.PortAudio.print_devices()'"],
+      aliases: [
+        pa_devices: "eval 'Membrane.PortAudio.print_devices()'",
+        docs: ["docs", &prepend_llms_links/1]
+      ],
 
       # hex
       description: "Raw audio retriever and player based on PortAudio",
@@ -74,6 +77,28 @@ defmodule Membrane.PortAudio.Mixfile do
       ],
       source_ref: "v#{@version}"
     ]
+  end
+
+  defp prepend_llms_links(_) do
+    output_dir = docs()[:output] || "doc"
+    path = Path.join(output_dir, "llms.txt")
+
+    if File.exists?(path) do
+      existing = File.read!(path)
+
+      footer = """
+
+
+      ## See Also
+
+      - [Membrane Framework AI Skill](https://hexdocs.pm/membrane_core/skill.md)
+      - [Membrane Core](https://hexdocs.pm/membrane_core/llms.txt)
+      """
+
+      File.write!(path, String.trim_trailing(existing) <> footer)
+    else
+      IO.warn("#{path} not found — llms.txt was not generated, check your ex_doc configuration")
+    end
   end
 
   defp package do
