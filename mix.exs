@@ -15,7 +15,7 @@ defmodule Membrane.PortAudio.Mixfile do
       dialyzer: dialyzer(),
       aliases: [
         pa_devices: "eval 'Membrane.PortAudio.print_devices()'",
-        docs: ["docs", &prepend_llms_links/1]
+        docs: ["docs", &append_llms_links/1]
       ],
 
       # hex
@@ -79,7 +79,7 @@ defmodule Membrane.PortAudio.Mixfile do
     ]
   end
 
-  defp prepend_llms_links(_) do
+  defp append_llms_links(_args) do
     output_dir = docs()[:output] || "doc"
     path = Path.join(output_dir, "llms.txt")
 
