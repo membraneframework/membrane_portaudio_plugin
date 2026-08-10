@@ -18,6 +18,8 @@ This package depends on the [PortAudio](http://portaudio.com/) library. The prec
 
 When running on linux [ALSA (alsa-lib)](https://github.com/alsa-project/alsa-lib) needs to be present on the system for the precompiled build to work. In most cases it's installed by default, however in case it's not present you can install it manually.
 
+If cross-compiling for Nerves, both PortAudio and ALSA need to be present in the target Nerves system. See [the Nerves docs](https://hexdocs.pm/nerves/customizing-systems.html) for instructions on how to build a custom nerves system.
+
 ### Manual instalation of dependencies
 #### Ubuntu
 
