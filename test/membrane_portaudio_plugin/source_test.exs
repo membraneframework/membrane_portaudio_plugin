@@ -37,7 +37,7 @@ defmodule Membrane.Portaudio.SourceTest do
 
       assert {[
                 stream_format:
-                  {:source, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}
+                  {:output, %RawAudio{channels: 2, sample_rate: 48_000, sample_format: :s16le}}
               ], %{state | native: ref}} ==
                @module.handle_playing(%{resource_guard: resource_guard}, state)
 
