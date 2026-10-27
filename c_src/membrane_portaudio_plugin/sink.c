@@ -74,6 +74,11 @@ UNIFEX_TERM create(UnifexEnv *env, UnifexPid demand_handler,
     goto error;
   }
 
+  if (channels <= 0 || ringbuffer_size <= 0 || pa_buffer_size < 0) {
+    error = "invalid_buffer_size";
+    goto error;
+  }
+
   int frame_size = channels * sample_size(sample_format);
 
   MembraneRingBuffer *ringbuffer =
